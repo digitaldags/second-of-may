@@ -6,6 +6,7 @@
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import AdminDashboard from '@/components/AdminDashboard'
+import { logoutAdmin } from '@/app/actions/admin'
 
 /**
  * Check if user is authenticated as admin
@@ -26,7 +27,7 @@ export default async function AdminPage({
   }
 
   // If authenticated, show dashboard
-  return <AdminDashboard />
+  return <AdminDashboard onLogout={logoutAdmin} />
 }
 
 /**

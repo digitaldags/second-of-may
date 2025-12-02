@@ -16,7 +16,11 @@ interface EditState {
   attending: boolean
 }
 
-export default function AdminDashboard() {
+interface AdminDashboardProps {
+  onLogout: () => void
+}
+
+export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [rsvps, setRsvps] = useState<RSVP[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -110,11 +114,6 @@ export default function AdminDashboard() {
     setActionMessage('RSVP deleted successfully.')
   }
 
-  const handleLogout = () => {
-    document.cookie = 'admin-authenticated=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-    window.location.href = '/admin'
-  }
-
   const handleExport = () => {
     // Convert RSVPs to CSV format
     const headers = ['Name', 'Email', 'Attending', 'Submitted At']
@@ -151,12 +150,14 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-lg shadow-lg p-8">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-serif text-wedding-maroon-dark">Admin Dashboard</h1>
-            <button
-              onClick={handleLogout}
-              className="text-wedding-maroon hover:text-wedding-maroon-dark transition-colors"
-            >
-              Logout
-            </button>
+            <form action={onLogout}>
+              <button
+                type="submit"
+                className="text-wedding-maroon hover:text-wedding-maroon-dark transition-colors"
+              >
+                Logout
+              </button>
+            </form>
           </div>
 
           <div className="mb-6 flex gap-4 flex-wrap">

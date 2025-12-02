@@ -16,8 +16,17 @@ export interface Database {
     Tables: {
       rsvps: {
         Row: RSVP
-        Insert: Omit<RSVP, 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Omit<RSVP, 'id' | 'created_at'>>
+        Insert: {
+          name: string
+          email: string
+          attending: boolean
+        }
+        Update: Partial<{
+          name: string
+          email: string
+          attending: boolean
+        }>
+        Relationships: []
       }
     }
   }

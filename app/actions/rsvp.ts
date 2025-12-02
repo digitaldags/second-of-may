@@ -6,7 +6,7 @@
 'use server'
 
 import { supabase } from '@/lib/supabase'
-import type { RSVPFormData } from '@/lib/types'
+import type { Database, RSVPFormData } from '@/lib/types'
 
 export interface ActionResult {
   success: boolean
@@ -39,15 +39,17 @@ export async function submitRSVP(formData: RSVPFormData): Promise<ActionResult> 
     }
 
     // Insert RSVP into database
+    type RSVPInsert = Database['public']['Tables']['rsvps']['Insert']
+    const newRSVP: RSVPInsert = {
+      name: formData.name.trim(),
+      email: formData.email.trim().toLowerCase(),
+      attending: formData.attending ?? false,
+    }
+
     const { data, error } = await supabase
       .from('rsvps')
-      .insert([
-        {
-          name: formData.name.trim(),
-          email: formData.email.trim().toLowerCase(),
-          attending: formData.attending ?? false,
-        },
-      ])
+      // Cast to any to satisfy Supabase generic typing in this context
+      .insert(newRSVP as any)
       .select()
       .single()
 

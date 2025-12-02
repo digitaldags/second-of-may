@@ -5,7 +5,7 @@
 'use server'
 
 import { supabase } from '@/lib/supabase'
-import type { RSVP } from '@/lib/types'
+import type { Database, RSVP } from '@/lib/types'
 
 /**
  * Fetch all RSVPs from the database
@@ -40,9 +40,11 @@ export async function updateRSVP(
   updates: Partial<Pick<RSVP, 'name' | 'email' | 'attending'>>
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const payload: Partial<
-      Pick<RSVP, 'name' | 'email' | 'attending' | 'updated_at'>
-    > = {
+    type RSVPUpdate = Database['public']['Tables']['rsvps']['Update'] & {
+      updated_at?: string
+    }
+
+    const payload: RSVPUpdate = {
       updated_at: new Date().toISOString(),
     }
 
@@ -58,7 +60,7 @@ export async function updateRSVP(
       payload.attending = updates.attending
     }
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('rsvps')
       .update(payload)
       .eq('id', id)

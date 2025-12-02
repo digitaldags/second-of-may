@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import type { RSVPFormData } from '@/lib/types'
+import type { Database, RSVPFormData } from '@/lib/types'
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,15 +29,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert RSVP into database
+    type RSVPInsert = Database['public']['Tables']['rsvps']['Insert']
+    const newRSVP: RSVPInsert = {
+      name: body.name.trim(),
+      email: body.email.trim().toLowerCase(),
+      attending: body.attending ?? false,
+    }
+
     const { data, error } = await supabase
       .from('rsvps')
-      .insert([
-        {
-          name: body.name.trim(),
-          email: body.email.trim().toLowerCase(),
-          attending: body.attending ?? false,
-        },
-      ])
+      // Cast to any to satisfy Supabase generic typing in this context
+      .insert(newRSVP as any)
       .select()
       .single()
 

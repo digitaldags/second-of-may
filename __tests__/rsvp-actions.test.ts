@@ -49,6 +49,7 @@ describe('submitRSVP', () => {
             email: 'john@example.com',
             attending: true,
             created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-01T00:00:00Z',
           },
           error: null,
         }),

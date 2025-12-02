@@ -40,7 +40,11 @@ export async function updateRSVP(
   updates: Partial<Pick<RSVP, 'name' | 'email' | 'attending'>>
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const payload: Partial<Pick<RSVP, 'name' | 'email' | 'attending'>> = {}
+    const payload: Partial<
+      Pick<RSVP, 'name' | 'email' | 'attending' | 'updated_at'>
+    > = {
+      updated_at: new Date().toISOString(),
+    }
 
     if (typeof updates.name === 'string') {
       payload.name = updates.name.trim()

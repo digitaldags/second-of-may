@@ -8,6 +8,7 @@ export interface RSVP {
   email: string
   attending: boolean
   created_at: string
+  updated_at: string | null
 }
 
 export interface Database {
@@ -15,7 +16,7 @@ export interface Database {
     Tables: {
       rsvps: {
         Row: RSVP
-        Insert: Omit<RSVP, 'id' | 'created_at'>
+        Insert: Omit<RSVP, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<RSVP, 'id' | 'created_at'>>
       }
     }

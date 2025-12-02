@@ -215,6 +215,9 @@ export default function AdminDashboard() {
                       Submitted
                     </th>
                     <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
+                      Updated
+                    </th>
+                    <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
                       Actions
                     </th>
                   </tr>
@@ -279,6 +282,11 @@ export default function AdminDashboard() {
                       </td>
                       <td className="border border-wedding-beige-dark px-4 py-2 text-wedding-maroon">
                         {new Date(rsvp.created_at).toLocaleString()}
+                      </td>
+                      <td className="border border-wedding-beige-dark px-4 py-2 text-wedding-maroon">
+                        {rsvp.updated_at
+                          ? new Date(rsvp.updated_at).toLocaleString()
+                          : '—'}
                       </td>
                       <td className="border border-wedding-beige-dark px-4 py-2 text-wedding-maroon">
                         {editState.id === rsvp.id ? (

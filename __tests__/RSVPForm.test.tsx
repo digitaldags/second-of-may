@@ -44,7 +44,14 @@ describe('RSVPForm', () => {
     const mockSubmitRSVP = submitRSVP as jest.MockedFunction<typeof submitRSVP>
     mockSubmitRSVP.mockResolvedValue({
       success: true,
-      data: { id: '1', name: 'John Doe', email: 'john@example.com', attending: true, created_at: '2024-01-01' },
+      data: {
+        id: '1',
+        name: 'John Doe',
+        email: 'john@example.com',
+        attending: true,
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+      },
     })
 
     render(<RSVPForm />)

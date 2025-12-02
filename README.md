@@ -44,14 +44,16 @@ CREATE TABLE rsvps (
   name TEXT NOT NULL,
   email TEXT NOT NULL,
   attending BOOLEAN NOT NULL DEFAULT false,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create an index on email for faster lookups
 CREATE INDEX idx_rsvps_email ON rsvps(email);
 
--- Create an index on created_at for sorting
+-- Create indexes for sorting/filtering
 CREATE INDEX idx_rsvps_created_at ON rsvps(created_at);
+CREATE INDEX idx_rsvps_updated_at ON rsvps(updated_at);
 ```
 
 3. Go to Project Settings > API to get your project URL and anon key
@@ -95,7 +97,7 @@ wedding-rsvp/
 │   ├── actions/          # Server actions
 │   │   ├── admin.ts      # Admin authentication
 │   │   ├── rsvp.ts       # RSVP submission
-│   │   └── rsvps.ts      # Fetch RSVPs
+│   │   └── rsvps.ts      # Admin CRUD for RSVPs
 │   ├── api/
 │   │   └── rsvp/
 │   │       └── route.ts  # API route for RSVP
@@ -133,6 +135,7 @@ The `rsvps` table has the following structure:
 - `email` (TEXT) - Guest email
 - `attending` (BOOLEAN) - Whether the guest is attending
 - `created_at` (TIMESTAMP) - When the RSVP was submitted
+- `updated_at` (TIMESTAMP) - When the RSVP was last edited (auto-updates when admins save changes)
 
 ## Customization
 

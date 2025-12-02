@@ -14,7 +14,7 @@ export default function Home() {
           </h1>
           <div className="w-24 h-1 bg-wedding-maroon mx-auto my-6"></div>
           <p className="text-lg text-wedding-maroon-dark mb-8">
-            Join us for our special day
+            Join us on our special day
           </p>
 
           <div className="space-y-6 mb-10 text-left">
@@ -23,7 +23,7 @@ export default function Home() {
                 Date & Time
               </h2>
               <p className="text-wedding-maroon">
-                Saturday, June 15, 2024 at 4:00 PM
+                Saturday, May 2, 2025 at 3:00 PM
               </p>
             </div>
 
@@ -32,9 +32,9 @@ export default function Home() {
                 Location
               </h2>
               <p className="text-wedding-maroon">
-                123 Wedding Lane
+                INC Locale of Pasay
                 <br />
-                Beautiful City, ST 12345
+                Admiral Hotel Manila - MGallery
               </p>
             </div>
 
@@ -43,7 +43,7 @@ export default function Home() {
                 Details
               </h2>
               <p className="text-wedding-maroon">
-                We can&apos;t wait to celebrate with you! Please RSVP by May 1st
+                We can&apos;t wait to celebrate with you! Please RSVP by April 2nd
                 to help us plan for the perfect day.
               </p>
             </div>

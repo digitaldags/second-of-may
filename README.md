@@ -1,74 +1,173 @@
-# second-of-may
+# Wedding RSVP
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+A beautiful wedding RSVP website built with Next.js, TypeScript, and Tailwind CSS. Features a public RSVP form and an admin dashboard to view and export guest responses.
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+## Features
 
-## Running the application in dev mode
+- 🎉 **Landing Page** - Beautiful wedding details page
+- 📝 **RSVP Form** - Easy-to-use form for guests to submit their RSVP
+- 🔐 **Admin Dashboard** - Protected dashboard to view and export RSVPs
+- 🎨 **Elegant Design** - Beige and maroon color theme with modern UI
+- ✅ **Form Validation** - Client and server-side validation
+- 📊 **CSV Export** - Export RSVP data as CSV for easy analysis
 
-You can run your application in dev mode that enables live coding using:
+## Tech Stack
 
-```shell script
-./mvnw quarkus:dev
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Database**: Supabase
+- **Testing**: Jest + React Testing Library
+- **Code Quality**: ESLint + Prettier
+
+## Prerequisites
+
+- Node.js 18+ and npm
+- A Supabase account and project
+
+## Setup Instructions
+
+### 1. Clone and Install Dependencies
+
+```bash
+npm install
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+### 2. Set Up Supabase
 
-## Packaging and running the application
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Go to the SQL Editor and run the following SQL to create the `rsvps` table:
 
-The application can be packaged using:
+```sql
+CREATE TABLE rsvps (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  attending BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
-```shell script
-./mvnw package
+-- Create an index on email for faster lookups
+CREATE INDEX idx_rsvps_email ON rsvps(email);
+
+-- Create an index on created_at for sorting
+CREATE INDEX idx_rsvps_created_at ON rsvps(created_at);
 ```
 
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+3. Go to Project Settings > API to get your project URL and anon key
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
+### 3. Environment Variables
 
-If you want to build an _über-jar_, execute the following command:
+Create a `.env.local` file in the root directory:
 
-```shell script
-./mvnw package -Dquarkus.package.jar.type=uber-jar
+```env
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_KEY=your_supabase_anon_key
+ADMIN_PASSWORD=your_admin_password
 ```
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
+**Note**: The `ADMIN_PASSWORD` is optional. If not set, it defaults to `'admin'`. Make sure to set a strong password in production!
 
-## Creating a native executable
+### 4. Run the Development Server
 
-You can create a native executable using:
-
-```shell script
-./mvnw package -Dnative
+```bash
+npm run dev
 ```
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-```shell script
-./mvnw package -Dnative -Dquarkus.native.container-build=true
+## Available Scripts
+
+- `npm run dev` - Start the development server
+- `npm run build` - Build the production application
+- `npm run start` - Start the production server
+- `npm run lint` - Run ESLint
+- `npm run format` - Format code with Prettier
+- `npm run format:check` - Check code formatting
+- `npm test` - Run tests
+- `npm run test:watch` - Run tests in watch mode
+
+## Project Structure
+
+```
+wedding-rsvp/
+├── app/
+│   ├── actions/          # Server actions
+│   │   ├── admin.ts      # Admin authentication
+│   │   ├── rsvp.ts       # RSVP submission
+│   │   └── rsvps.ts      # Fetch RSVPs
+│   ├── api/
+│   │   └── rsvp/
+│   │       └── route.ts  # API route for RSVP
+│   ├── admin/            # Admin dashboard page
+│   ├── rsvp/             # RSVP form page
+│   ├── globals.css       # Global styles
+│   ├── layout.tsx        # Root layout
+│   └── page.tsx          # Landing page
+├── components/
+│   ├── AdminDashboard.tsx # Admin dashboard component
+│   └── RSVPForm.tsx      # RSVP form component
+├── lib/
+│   ├── supabase.ts       # Supabase client
+│   └── types.ts          # TypeScript types
+└── __tests__/            # Test files
 ```
 
-You can then execute your native executable with: `./target/second-of-may-1.0.0-SNAPSHOT-runner`
+## Pages
 
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
+### `/` - Landing Page
+The main landing page with wedding details and a link to the RSVP form.
 
-## Related Guides
+### `/rsvp` - RSVP Form
+Public page where guests can submit their RSVP with name, email, and attendance status.
 
-- REST ([guide](https://quarkus.io/guides/rest)): A Jakarta REST implementation utilizing build time processing and Vert.x. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it.
-- REST Client ([guide](https://quarkus.io/guides/rest-client)): Call REST services
-- REST Jackson ([guide](https://quarkus.io/guides/rest#json-serialisation)): Jackson serialization support for Quarkus REST. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it
+### `/admin` - Admin Dashboard
+Protected page (password required) to view all RSVPs, see statistics, and export data as CSV.
 
-## Provided Code
+## Database Schema
 
-### REST Client
+The `rsvps` table has the following structure:
 
-Invoke different services through REST with JSON
+- `id` (UUID) - Primary key
+- `name` (TEXT) - Guest name
+- `email` (TEXT) - Guest email
+- `attending` (BOOLEAN) - Whether the guest is attending
+- `created_at` (TIMESTAMP) - When the RSVP was submitted
 
-[Related guide section...](https://quarkus.io/guides/rest-client)
+## Customization
 
-### REST
+### Update Wedding Details
 
-Easily start your REST Web Services
+Edit `app/page.tsx` to update the wedding date, location, and other details.
 
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+### Change Color Theme
+
+The beige/maroon theme is defined in `tailwind.config.ts`. Modify the `wedding` color palette to customize the colors.
+
+### Admin Password
+
+Set the `ADMIN_PASSWORD` environment variable to change the admin login password.
+
+## Testing
+
+The project includes unit tests for form validation and server actions. Run tests with:
+
+```bash
+npm test
+```
+
+## Deployment
+
+1. Build the application: `npm run build`
+2. Set environment variables in your hosting platform
+3. Deploy to Vercel, Netlify, or your preferred hosting service
+
+For Vercel deployment:
+- Connect your GitHub repository
+- Add environment variables in the Vercel dashboard
+- Deploy automatically on push
+
+## License
+
+MIT
+

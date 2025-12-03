@@ -170,6 +170,13 @@ For Vercel deployment:
 - Add environment variables in the Vercel dashboard
 - Deploy automatically on push
 
+## Docker Commands
+- `docker build -t wedding-rsvp .`
+- `docker run --rm -p 3000:3000 \
+     -e SUPABASE_URL=your_supabase_url \
+     -e SUPABASE_KEY=your_supabase_key \
+     -e ADMIN_PASSWORD=your_admin_password \
+     wedding-rsvp`
 ## License
 
 MIT

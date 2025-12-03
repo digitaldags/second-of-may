@@ -36,22 +36,39 @@ npm install
 ### 2. Set Up Supabase
 
 1. Create a new project at [supabase.com](https://supabase.com)
-2. Go to the SQL Editor and run the following SQL to create the `rsvps` table:
+2. Go to the SQL Editor and run the following SQL to create the tables:
 
 ```sql
+-- Create guest_list table (pre-approved guests)
+CREATE TABLE guest_list (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create rsvps table
 CREATE TABLE rsvps (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
   email TEXT NOT NULL,
   attending BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create an index on email for faster lookups
-CREATE INDEX idx_rsvps_email ON rsvps(email);
+-- Create indexes for guest_list
+CREATE INDEX idx_guest_list_first_name ON guest_list(first_name);
+CREATE INDEX idx_guest_list_last_name ON guest_list(last_name);
+CREATE INDEX idx_guest_list_created_at ON guest_list(created_at);
+CREATE INDEX idx_guest_list_updated_at ON guest_list(updated_at);
 
--- Create indexes for sorting/filtering
+-- Create indexes for rsvps
+CREATE INDEX idx_rsvps_email ON rsvps(email);
+CREATE INDEX idx_rsvps_first_name ON rsvps(first_name);
+CREATE INDEX idx_rsvps_last_name ON rsvps(last_name);
 CREATE INDEX idx_rsvps_created_at ON rsvps(created_at);
 CREATE INDEX idx_rsvps_updated_at ON rsvps(updated_at);
 ```
@@ -97,17 +114,24 @@ wedding-rsvp/
 │   ├── actions/          # Server actions
 │   │   ├── admin.ts      # Admin authentication
 │   │   ├── rsvp.ts       # RSVP submission
-│   │   └── rsvps.ts      # Admin CRUD for RSVPs
+│   │   ├── rsvps.ts      # Admin CRUD for RSVPs
+│   │   └── guests.ts    # Guest list CRUD operations
 │   ├── api/
 │   │   └── rsvp/
 │   │       └── route.ts  # API route for RSVP
-│   ├── admin/            # Admin dashboard page
+│   ├── admin/            # Admin dashboard pages
+│   │   ├── page.tsx      # Admin login page
+│   │   ├── rsvps/        # RSVP list page
+│   │   └── guests/       # Guest list page
 │   ├── rsvp/             # RSVP form page
 │   ├── globals.css       # Global styles
 │   ├── layout.tsx        # Root layout
 │   └── page.tsx          # Landing page
 ├── components/
-│   ├── AdminDashboard.tsx # Admin dashboard component
+│   ├── AdminDashboard.tsx # RSVP list component
+│   ├── AdminLayout.tsx   # Admin layout with sidebar
+│   ├── GuestList.tsx      # Guest list component
+│   ├── Hero.tsx          # Hero section component
 │   └── RSVPForm.tsx      # RSVP form component
 ├── lib/
 │   ├── supabase.ts       # Supabase client
@@ -123,19 +147,47 @@ The main landing page with wedding details and a link to the RSVP form.
 ### `/rsvp` - RSVP Form
 Public page where guests can submit their RSVP with name, email, and attendance status.
 
-### `/admin` - Admin Dashboard
-Protected page (password required) to view all RSVPs, see statistics, and export data as CSV.
+### `/admin` - Admin Login
+Protected login page (password required) to access the admin dashboard.
+
+### `/admin/rsvps` - RSVP List
+Admin page to view all RSVPs, see statistics, edit/delete RSVPs, and export data as CSV.
+
+### `/admin/guests` - Guest List
+Admin page to manage the pre-approved guest list with CRUD functionality.
 
 ## Database Schema
 
-The `rsvps` table has the following structure:
+### `guest_list` Table
+
+The `guest_list` table stores pre-approved guests:
 
 - `id` (UUID) - Primary key
-- `name` (TEXT) - Guest name
+- `first_name` (TEXT) - Guest first name
+- `last_name` (TEXT) - Guest last name
+- `created_at` (TIMESTAMP) - When the guest was added
+- `updated_at` (TIMESTAMP) - When the guest was last edited
+
+### `rsvps` Table
+
+The `rsvps` table stores RSVP submissions:
+
+- `id` (UUID) - Primary key
+- `first_name` (TEXT) - Guest first name
+- `last_name` (TEXT) - Guest last name
 - `email` (TEXT) - Guest email
 - `attending` (BOOLEAN) - Whether the guest is attending
 - `created_at` (TIMESTAMP) - When the RSVP was submitted
 - `updated_at` (TIMESTAMP) - When the RSVP was last edited (auto-updates when admins save changes)
+
+## Guest List Feature
+
+The application includes a guest list validation feature:
+
+- **Pre-approved Guests**: Only guests in the `guest_list` table can submit RSVPs
+- **Case-Insensitive Matching**: Name matching is case-insensitive
+- **Auto-Add**: If a guest submits an RSVP but isn't in the list, they're automatically added to `guest_list` but their RSVP is rejected with an error message
+- **Admin Management**: Admins can manage the guest list through the `/admin/guests` page with full CRUD functionality
 
 ## Customization
 

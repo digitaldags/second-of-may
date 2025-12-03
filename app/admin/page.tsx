@@ -1,12 +1,10 @@
 /**
  * Admin dashboard page with password protection
- * View and export RSVP responses
+ * Redirects to RSVPs page after login
  */
 
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
-import AdminDashboard from '@/components/AdminDashboard'
-import { logoutAdmin } from '@/app/actions/admin'
 
 /**
  * Check if user is authenticated as admin
@@ -26,8 +24,8 @@ export default async function AdminPage({
     return <AdminLogin error={searchParams.error === 'invalid'} />
   }
 
-  // If authenticated, show dashboard
-  return <AdminDashboard onLogout={logoutAdmin} />
+  // If authenticated, redirect to RSVPs page
+  redirect('/admin/rsvps')
 }
 
 /**
@@ -47,7 +45,7 @@ function AdminLogin({ error }: { error: boolean }) {
         sameSite: 'lax',
         maxAge: 60 * 60 * 24, // 24 hours
       })
-      redirect('/admin')
+      redirect('/admin/rsvps')
     } else {
       redirect('/admin?error=invalid')
     }
@@ -94,4 +92,3 @@ function AdminLogin({ error }: { error: boolean }) {
     </div>
   )
 }
-

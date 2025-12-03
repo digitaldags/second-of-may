@@ -33,11 +33,11 @@ export async function getAllRSVPs(): Promise<RSVP[]> {
 /**
  * Update an existing RSVP
  * @param id - RSVP ID
- * @param updates - Fields to update (name, email, attending)
+ * @param updates - Fields to update (first_name, last_name, email, attending)
  */
 export async function updateRSVP(
   id: string,
-  updates: Partial<Pick<RSVP, 'name' | 'email' | 'attending'>>
+  updates: Partial<Pick<RSVP, 'first_name' | 'last_name' | 'email' | 'attending'>>
 ): Promise<{ success: boolean; error?: string }> {
   try {
     type RSVPUpdate = Database['public']['Tables']['rsvps']['Update'] & {
@@ -48,8 +48,12 @@ export async function updateRSVP(
       updated_at: new Date().toISOString(),
     }
 
-    if (typeof updates.name === 'string') {
-      payload.name = updates.name.trim()
+    if (typeof updates.first_name === 'string') {
+      payload.first_name = updates.first_name.trim()
+    }
+
+    if (typeof updates.last_name === 'string') {
+      payload.last_name = updates.last_name.trim()
     }
 
     if (typeof updates.email === 'string') {
@@ -98,3 +102,4 @@ export async function deleteRSVP(
     return { success: false, error: 'An unexpected error occurred.' }
   }
 }
+

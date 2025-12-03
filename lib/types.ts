@@ -4,9 +4,18 @@
 
 export interface RSVP {
   id: string
-  name: string
+  first_name: string
+  last_name: string
   email: string
   attending: boolean
+  created_at: string
+  updated_at: string | null
+}
+
+export interface Guest {
+  id: string
+  first_name: string
+  last_name: string
   created_at: string
   updated_at: string | null
 }
@@ -17,14 +26,28 @@ export interface Database {
       rsvps: {
         Row: RSVP
         Insert: {
-          name: string
+          first_name: string
+          last_name: string
           email: string
           attending: boolean
         }
         Update: Partial<{
-          name: string
+          first_name: string
+          last_name: string
           email: string
           attending: boolean
+        }>
+        Relationships: []
+      }
+      guest_list: {
+        Row: Guest
+        Insert: {
+          first_name: string
+          last_name: string
+        }
+        Update: Partial<{
+          first_name: string
+          last_name: string
         }>
         Relationships: []
       }
@@ -33,7 +56,8 @@ export interface Database {
 }
 
 export interface RSVPFormData {
-  name: string
+  first_name: string
+  last_name: string
   email: string
   attending: boolean
 }

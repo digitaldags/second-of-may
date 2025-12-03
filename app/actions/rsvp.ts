@@ -7,6 +7,23 @@
 
 import { supabase } from '@/lib/supabase'
 import type { Database, RSVPFormData } from '@/lib/types'
+import { checkGuestExists } from '@/app/actions/guests'
+
+async function hasExistingRSVP(first_name: string, last_name: string) {
+  const { data, error } = await supabase
+    .from('rsvps')
+    .select('id')
+    .ilike('first_name', first_name.trim())
+    .ilike('last_name', last_name.trim())
+    .limit(1)
+
+  if (error) {
+    console.error('Error checking existing RSVP:', error)
+    return false
+  }
+
+  return (data?.length ?? 0) > 0
+}
 
 export interface ActionResult {
   success: boolean
@@ -22,10 +39,22 @@ export interface ActionResult {
 export async function submitRSVP(formData: RSVPFormData): Promise<ActionResult> {
   try {
     // Validate required fields
-    if (!formData.name || !formData.email) {
+    if (!formData.first_name || !formData.last_name || !formData.email) {
       return {
         success: false,
-        error: 'Name and email are required',
+        error: 'First name, last name, and email are required',
+      }
+    }
+
+    // Prevent duplicate RSVPs by name (case-insensitive)
+    const alreadyRSVPed = await hasExistingRSVP(
+      formData.first_name,
+      formData.last_name
+    )
+    if (alreadyRSVPed) {
+      return {
+        success: false,
+        error: 'We already received an RSVP under this name.',
       }
     }
 
@@ -38,10 +67,24 @@ export async function submitRSVP(formData: RSVPFormData): Promise<ActionResult> 
       }
     }
 
+    // Check if guest exists in guest list (case-insensitive)
+    const guestExists = await checkGuestExists(
+      formData.first_name,
+      formData.last_name
+    )
+
+    if (!guestExists) {
+      return {
+        success: false,
+        error: 'Your name is not in our guest list. Please contact us if you believe this is an error.',
+      }
+    }
+
     // Insert RSVP into database
     type RSVPInsert = Database['public']['Tables']['rsvps']['Insert']
     const newRSVP: RSVPInsert = {
-      name: formData.name.trim(),
+      first_name: formData.first_name.trim(),
+      last_name: formData.last_name.trim(),
       email: formData.email.trim().toLowerCase(),
       attending: formData.attending ?? false,
     }

@@ -5,7 +5,7 @@
 
 'use server'
 
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 import type { Database, RSVPFormData } from '@/lib/types'
 
 export interface ActionResult {
@@ -46,6 +46,7 @@ export async function submitRSVP(formData: RSVPFormData): Promise<ActionResult> 
       attending: formData.attending ?? false,
     }
 
+    const supabase = getSupabase()
     const { data, error } = await supabase
       .from('rsvps')
       // Cast to any to satisfy Supabase generic typing in this context

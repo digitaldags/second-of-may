@@ -4,7 +4,7 @@
 
 'use server'
 
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 import type { Database, RSVP } from '@/lib/types'
 
 /**
@@ -13,6 +13,7 @@ import type { Database, RSVP } from '@/lib/types'
  */
 export async function getAllRSVPs(): Promise<RSVP[]> {
   try {
+    const supabase = getSupabase()
     const { data, error } = await supabase
       .from('rsvps')
       .select('*')
@@ -60,6 +61,7 @@ export async function updateRSVP(
       payload.attending = updates.attending
     }
 
+    const supabase = getSupabase()
     const { error } = await (supabase as any)
       .from('rsvps')
       .update(payload)
@@ -85,6 +87,7 @@ export async function deleteRSVP(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const supabase = getSupabase()
     const { error } = await supabase.from('rsvps').delete().eq('id', id)
 
     if (error) {

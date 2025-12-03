@@ -4,11 +4,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 import type { Database, RSVPFormData } from '@/lib/types'
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = getSupabase() // ← SAFE: created at runtime only
     const body: RSVPFormData = await request.json()
 
     // Validate required fields
@@ -38,7 +39,6 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase
       .from('rsvps')
-      // Cast to any to satisfy Supabase generic typing in this context
       .insert(newRSVP as any)
       .select()
       .single()
@@ -51,7 +51,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ data, message: 'RSVP submitted successfully' }, { status: 201 })
+    return NextResponse.json(
+      { data, message: 'RSVP submitted successfully' },
+      { status: 201 }
+    )
   } catch (error) {
     console.error('API error:', error)
     return NextResponse.json(
@@ -60,4 +63,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-

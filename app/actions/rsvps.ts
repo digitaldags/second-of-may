@@ -37,7 +37,7 @@ export async function getAllRSVPs(): Promise<RSVP[]> {
  */
 export async function updateRSVP(
   id: string,
-  updates: Partial<Pick<RSVP, 'first_name' | 'last_name' | 'email' | 'attending'>>
+  updates: Partial<Pick<RSVP, 'first_name' | 'last_name' | 'email' | 'attending' | 'attendance_type'>>
 ): Promise<{ success: boolean; error?: string }> {
   try {
     type RSVPUpdate = Database['public']['Tables']['rsvps']['Update'] & {
@@ -62,6 +62,10 @@ export async function updateRSVP(
 
     if (typeof updates.attending === 'boolean') {
       payload.attending = updates.attending
+    }
+
+    if (updates.attendance_type && ['church', 'reception', 'both'].includes(updates.attendance_type)) {
+      payload.attendance_type = updates.attendance_type
     }
 
     const { error } = await (supabase as any)

@@ -15,6 +15,7 @@ export default function RSVPForm() {
     last_name: '',
     email: '',
     attending: true,
+    attendance_type: 'both',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -30,7 +31,7 @@ export default function RSVPForm() {
 
     if (result.success) {
       setMessage({ type: 'success', text: 'Thank you! Your RSVP has been submitted.' })
-      setFormData({ first_name: '', last_name: '', email: '', attending: true })
+      setFormData({ first_name: '', last_name: '', email: '', attending: true, attendance_type: 'both' })
     } else {
       // Show error modal if guest not in list
       if (
@@ -124,6 +125,49 @@ export default function RSVPForm() {
             </label>
           </div>
         </div>
+
+        {formData.attending && (
+          <div>
+            <label className="block text-sm font-medium text-wedding-maroon-dark mb-3">
+              Attendance Preference *
+            </label>
+            <div className="space-y-2">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="attendance_type"
+                  value="both"
+                  checked={formData.attendance_type === 'both'}
+                  onChange={(e) => setFormData({ ...formData, attendance_type: e.target.value as 'church' | 'reception' | 'both' })}
+                  className="mr-2 text-wedding-maroon focus:ring-wedding-maroon"
+                />
+                <span className="text-wedding-maroon-dark">Both Church & Reception</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="attendance_type"
+                  value="church"
+                  checked={formData.attendance_type === 'church'}
+                  onChange={(e) => setFormData({ ...formData, attendance_type: e.target.value as 'church' | 'reception' | 'both' })}
+                  className="mr-2 text-wedding-maroon focus:ring-wedding-maroon"
+                />
+                <span className="text-wedding-maroon-dark">Church Ceremony Only</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="attendance_type"
+                  value="reception"
+                  checked={formData.attendance_type === 'reception'}
+                  onChange={(e) => setFormData({ ...formData, attendance_type: e.target.value as 'church' | 'reception' | 'both' })}
+                  className="mr-2 text-wedding-maroon focus:ring-wedding-maroon"
+                />
+                <span className="text-wedding-maroon-dark">Reception Only</span>
+              </label>
+            </div>
+          </div>
+        )}
 
         {message && (
           <div

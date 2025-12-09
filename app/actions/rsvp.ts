@@ -80,6 +80,14 @@ export async function submitRSVP(formData: RSVPFormData): Promise<ActionResult> 
       }
     }
 
+    // Validate attendance_type if attending
+    if (formData.attending && !['church', 'reception', 'both'].includes(formData.attendance_type)) {
+      return {
+        success: false,
+        error: 'Invalid attendance type selected',
+      }
+    }
+
     // Insert RSVP into database
     type RSVPInsert = Database['public']['Tables']['rsvps']['Insert']
     const newRSVP: RSVPInsert = {
@@ -87,6 +95,7 @@ export async function submitRSVP(formData: RSVPFormData): Promise<ActionResult> 
       last_name: formData.last_name.trim(),
       email: formData.email.trim().toLowerCase(),
       attending: formData.attending ?? false,
+      attendance_type: formData.attending ? formData.attendance_type : 'both',
     }
 
     const { data, error } = await supabase

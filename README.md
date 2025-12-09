@@ -55,6 +55,7 @@ CREATE TABLE rsvps (
   last_name TEXT NOT NULL,
   email TEXT NOT NULL,
   attending BOOLEAN NOT NULL DEFAULT false,
+  attendance_type TEXT NOT NULL DEFAULT 'both' CHECK (attendance_type IN ('church', 'reception', 'both')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -69,6 +70,7 @@ CREATE INDEX idx_guest_list_updated_at ON guest_list(updated_at);
 CREATE INDEX idx_rsvps_email ON rsvps(email);
 CREATE INDEX idx_rsvps_first_name ON rsvps(first_name);
 CREATE INDEX idx_rsvps_last_name ON rsvps(last_name);
+CREATE INDEX idx_rsvps_attendance_type ON rsvps(attendance_type);
 CREATE INDEX idx_rsvps_created_at ON rsvps(created_at);
 CREATE INDEX idx_rsvps_updated_at ON rsvps(updated_at);
 ```
@@ -177,6 +179,7 @@ The `rsvps` table stores RSVP submissions:
 - `last_name` (TEXT) - Guest last name
 - `email` (TEXT) - Guest email
 - `attending` (BOOLEAN) - Whether the guest is attending
+- `attendance_type` (TEXT) - Type of attendance: 'church', 'reception', or 'both' (defaults to 'both')
 - `created_at` (TIMESTAMP) - When the RSVP was submitted
 - `updated_at` (TIMESTAMP) - When the RSVP was last edited (auto-updates when admins save changes)
 

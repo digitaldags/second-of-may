@@ -2,12 +2,15 @@
  * TypeScript types for the database schema
  */
 
+export type AttendanceType = 'church' | 'reception' | 'both'
+
 export interface RSVP {
   id: string
   first_name: string
   last_name: string
   email: string
   attending: boolean
+  attendance_type: AttendanceType
   created_at: string
   updated_at: string | null
 }
@@ -30,12 +33,14 @@ export interface Database {
           last_name: string
           email: string
           attending: boolean
+          attendance_type: AttendanceType
         }
         Update: Partial<{
           first_name: string
           last_name: string
           email: string
           attending: boolean
+          attendance_type: AttendanceType
         }>
         Relationships: []
       }
@@ -60,5 +65,6 @@ export interface RSVPFormData {
   last_name: string
   email: string
   attending: boolean
+  attendance_type: AttendanceType
 }
 

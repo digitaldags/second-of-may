@@ -69,6 +69,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate attendance_type if attending
+    if (body.attending && !['church', 'reception', 'both'].includes(body.attendance_type)) {
+      return NextResponse.json(
+        { error: 'Invalid attendance type selected' },
+        { status: 400 }
+      )
+    }
+
     // Insert RSVP into database
     type RSVPInsert = Database['public']['Tables']['rsvps']['Insert']
     const newRSVP: RSVPInsert = {
@@ -76,6 +84,7 @@ export async function POST(request: NextRequest) {
       last_name: body.last_name.trim(),
       email: body.email.trim().toLowerCase(),
       attending: body.attending ?? false,
+      attendance_type: body.attending ? body.attendance_type : 'both',
     }
 
     const { data, error } = await supabase

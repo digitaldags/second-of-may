@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Hero from '@/components/Hero'
 import VenueDetails from '@/components/VenueDetails'
 import AttireDetails from '@/components/AttireDetails'
+import FAQSection from '@/components/FAQSection'
 
 export default function Home() {
   return (
@@ -18,6 +19,9 @@ export default function Home() {
 
       {/* Attire Details Section */}
       <AttireDetails />
+
+      {/* FAQ Section */}
+      <FAQSection />
 
       {/* RSVP CTA Section */}
       <section className="w-full bg-white py-20">

@@ -70,9 +70,9 @@ export default function AttireDetails() {
             {/* Illustrations and Color Palette */}
             <div className="flex flex-col items-center gap-6 pt-4">
               {/* Character Illustrations */}
-              <div className="flex items-end justify-center gap-4">
+              <div className="flex items-end justify-center gap-1.5 sm:gap-4">
                 {/* Lady in Green Gown */}
-                <div className="relative w-20 h-28 md:w-24 md:h-32">
+                <div className="relative w-12 h-20 sm:w-20 sm:h-28 md:w-24 md:h-32 flex-shrink-0">
                   <svg
                     viewBox="0 0 100 140"
                     className="w-full h-full"
@@ -96,11 +96,11 @@ export default function AttireDetails() {
                 </div>
 
                 {/* Color Palette Circles */}
-                <div className="flex gap-2 items-center px-4">
+                <div className="flex gap-0.5 sm:gap-2 items-center px-1 sm:px-4 flex-shrink-0 self-center">
                   {colorPalette.map((color, index) => (
                     <div
                       key={index}
-                      className="w-10 h-10 md:w-12 md:h-12 rounded-full shadow-md border-2 border-white"
+                      className="w-6 h-6 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full shadow-sm sm:shadow-md border border-white sm:border-2 flex-shrink-0"
                       style={{ backgroundColor: color.hex }}
                       title={color.name}
                     />
@@ -108,7 +108,7 @@ export default function AttireDetails() {
                 </div>
 
                 {/* Gentleman in Barong */}
-                <div className="relative w-20 h-28 md:w-24 md:h-32">
+                <div className="relative w-12 h-20 sm:w-20 sm:h-28 md:w-24 md:h-32 flex-shrink-0">
                   <svg
                     viewBox="0 0 100 140"
                     className="w-full h-full"

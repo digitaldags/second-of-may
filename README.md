@@ -44,6 +44,7 @@ CREATE TABLE guest_list (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
+  enabled BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -63,6 +64,7 @@ CREATE TABLE rsvps (
 -- Create indexes for guest_list
 CREATE INDEX idx_guest_list_first_name ON guest_list(first_name);
 CREATE INDEX idx_guest_list_last_name ON guest_list(last_name);
+CREATE INDEX idx_guest_list_enabled ON guest_list(enabled);
 CREATE INDEX idx_guest_list_created_at ON guest_list(created_at);
 CREATE INDEX idx_guest_list_updated_at ON guest_list(updated_at);
 
@@ -185,12 +187,25 @@ The `rsvps` table stores RSVP submissions:
 
 ## Guest List Feature
 
-The application includes a guest list validation feature:
+The application includes a comprehensive guest list validation and management feature:
 
-- **Pre-approved Guests**: Only guests in the `guest_list` table can submit RSVPs
-- **Case-Insensitive Matching**: Name matching is case-insensitive
-- **Auto-Add**: If a guest submits an RSVP but isn't in the list, they're automatically added to `guest_list` but their RSVP is rejected with an error message
-- **Admin Management**: Admins can manage the guest list through the `/admin/guests` page with full CRUD functionality
+### Guest Validation (RSVP Form)
+- **Pre-approved Guests Only**: Only guests in the `guest_list` table who are **enabled** can submit RSVPs
+- **Case-Insensitive Matching**: Name matching is case-insensitive for user convenience
+- **Strict Validation**: If a guest is not in the list OR is disabled, the RSVP is rejected with the same error message: "Your name is not in our guest list"
+  - This prevents revealing whether a guest exists but is disabled (for privacy/security)
+- **No Auto-Add**: Guests NOT in the pre-approved list are never automatically added
+
+### Admin Guest List Management (`/admin/guests`)
+- **Enable/Disable Guests**: Toggle individual guests between enabled and disabled status
+  - Disabled guests cannot submit RSVPs but remain in the database for record-keeping
+- **Count Dashboard**: View real-time counts of Total, Enabled, and Disabled guests
+- **Full CRUD Operations**: Create, Read, Update, and Delete guest entries
+- **CSV Import**: Bulk import guests from a CSV file (format: `first_name, last_name`)
+  - All imported guests are enabled by default
+  - Existing guests are automatically skipped
+  - Import results show counts and any errors
+- **CSV Export**: Export the entire guest list with all fields including status
 
 ## Customization
 

@@ -31,10 +31,10 @@ export async function getAllGuests(): Promise<Guest[]> {
 }
 
 /**
- * Check if a guest exists in the guest list (case-insensitive)
+ * Check if a guest exists in the guest list AND is enabled (case-insensitive)
  * @param first_name - Guest first name
  * @param last_name - Guest last name
- * @returns true if guest exists, false otherwise
+ * @returns true if guest exists and is enabled, false otherwise
  */
 export async function checkGuestExists(
   first_name: string,
@@ -43,9 +43,10 @@ export async function checkGuestExists(
   try {
     const { data, error } = await supabase
       .from('guest_list')
-      .select('id')
+      .select('id, enabled')
       .ilike('first_name', first_name.trim())
       .ilike('last_name', last_name.trim())
+      .eq('enabled', true)
       .limit(1)
 
     if (error) {
@@ -63,11 +64,11 @@ export async function checkGuestExists(
 /**
  * Update an existing guest
  * @param id - Guest ID
- * @param updates - Fields to update (first_name, last_name)
+ * @param updates - Fields to update (first_name, last_name, enabled)
  */
 export async function updateGuest(
   id: string,
-  updates: Partial<Pick<Guest, 'first_name' | 'last_name'>>
+  updates: Partial<Pick<Guest, 'first_name' | 'last_name' | 'enabled'>>
 ): Promise<{ success: boolean; error?: string }> {
   try {
     type GuestUpdate = Database['public']['Tables']['guest_list']['Update'] & {
@@ -84,6 +85,10 @@ export async function updateGuest(
 
     if (typeof updates.last_name === 'string') {
       payload.last_name = updates.last_name.trim()
+    }
+
+    if (typeof updates.enabled === 'boolean') {
+      payload.enabled = updates.enabled
     }
 
     const { error } = await (supabase as any)
@@ -131,11 +136,39 @@ async function checkGuestInRSVPs(
 }
 
 /**
+ * Check if a guest exists (regardless of enabled status) for uniqueness checks
+ */
+async function checkGuestExistsAny(
+  first_name: string,
+  last_name: string
+): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('guest_list')
+      .select('id')
+      .ilike('first_name', first_name.trim())
+      .ilike('last_name', last_name.trim())
+      .limit(1)
+
+    if (error) {
+      console.error('Error checking guest:', error)
+      return false
+    }
+
+    return (data?.length ?? 0) > 0
+  } catch (error) {
+    console.error('Error checking guest:', error)
+    return false
+  }
+}
+
+/**
  * Create a new guest entry (admin action)
  */
 export async function createGuest(
   first_name: string,
-  last_name: string
+  last_name: string,
+  enabled: boolean = true
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const trimmedFirst = first_name.trim()
@@ -145,7 +178,7 @@ export async function createGuest(
       return { success: false, error: 'First and last name are required.' }
     }
 
-    const exists = await checkGuestExists(trimmedFirst, trimmedLast)
+    const exists = await checkGuestExistsAny(trimmedFirst, trimmedLast)
     if (exists) {
       return { success: false, error: 'Guest already exists in the list.' }
     }
@@ -162,6 +195,7 @@ export async function createGuest(
     const newGuest: GuestInsert = {
       first_name: trimmedFirst,
       last_name: trimmedLast,
+      enabled,
     }
 
     const { error } = await supabase
@@ -199,6 +233,100 @@ export async function deleteGuest(
   } catch (error) {
     console.error('Error deleting guest:', error)
     return { success: false, error: 'An unexpected error occurred.' }
+  }
+}
+
+/**
+ * Import guests from CSV data
+ * @param csvData - CSV file content as string
+ * @returns Object with success status, counts, and errors
+ */
+export async function importGuestsFromCSV(csvData: string): Promise<{
+  success: boolean
+  imported: number
+  skipped: number
+  errors: string[]
+}> {
+  try {
+    const lines = csvData.split('\n').filter((line) => line.trim())
+    const errors: string[] = []
+    let imported = 0
+    let skipped = 0
+
+    // Skip header row if present
+    const startIndex = lines[0].toLowerCase().includes('first') ? 1 : 0
+
+    for (let i = startIndex; i < lines.length; i++) {
+      const line = lines[i].trim()
+      if (!line) continue
+
+      // Parse CSV line (handle quoted values)
+      const values = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g)?.map((v) =>
+        v.replace(/^"|"$/g, '').trim()
+      )
+
+      if (!values || values.length < 2) {
+        errors.push(`Line ${i + 1}: Invalid format (need first_name, last_name)`)
+        skipped++
+        continue
+      }
+
+      const [first_name, last_name] = values
+
+      if (!first_name || !last_name) {
+        errors.push(`Line ${i + 1}: Missing first or last name`)
+        skipped++
+        continue
+      }
+
+      // Check if guest already exists
+      const exists = await checkGuestExistsAny(first_name, last_name)
+      if (exists) {
+        skipped++
+        continue
+      }
+
+      // Check if in RSVPs
+      const inRSVPs = await checkGuestInRSVPs(first_name, last_name)
+      if (inRSVPs) {
+        skipped++
+        continue
+      }
+
+      // Insert guest
+      type GuestInsert = Database['public']['Tables']['guest_list']['Insert']
+      const newGuest: GuestInsert = {
+        first_name: first_name.trim(),
+        last_name: last_name.trim(),
+        enabled: true,
+      }
+
+      const { error } = await supabase
+        .from('guest_list')
+        .insert(newGuest as any)
+
+      if (error) {
+        errors.push(`Line ${i + 1}: ${error.message}`)
+        skipped++
+      } else {
+        imported++
+      }
+    }
+
+    return {
+      success: true,
+      imported,
+      skipped,
+      errors,
+    }
+  } catch (error) {
+    console.error('Error importing CSV:', error)
+    return {
+      success: false,
+      imported: 0,
+      skipped: 0,
+      errors: ['Failed to process CSV file. Please check the format.'],
+    }
   }
 }
 

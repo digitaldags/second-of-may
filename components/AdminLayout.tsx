@@ -6,6 +6,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { logoutAdmin } from '@/app/actions/admin'
 
 interface AdminLayoutProps {
   children: React.ReactNode
@@ -14,9 +15,8 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname()
  
-  const handleLogout = () => {
-    document.cookie = 'admin-authenticated=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-    window.location.href = '/admin'
+  const handleLogout = async () => {
+    await logoutAdmin()
   }
 
   return (

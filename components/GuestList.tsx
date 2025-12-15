@@ -5,12 +5,13 @@
 
 'use client'
 
-import { useEffect, useState, FormEvent } from 'react'
+import { useEffect, useState, FormEvent, ChangeEvent } from 'react'
 import {
   createGuest,
   deleteGuest,
   getAllGuests,
   updateGuest,
+  importGuestsFromCSV,
 } from '@/app/actions/guests'
 import type { Guest } from '@/lib/types'
 
@@ -18,6 +19,7 @@ interface EditState {
   id: string | null
   first_name: string
   last_name: string
+  enabled: boolean
 }
 
 export default function GuestList() {
@@ -29,6 +31,7 @@ export default function GuestList() {
     id: null,
     first_name: '',
     last_name: '',
+    enabled: true,
   })
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
@@ -36,6 +39,13 @@ export default function GuestList() {
   const [addError, setAddError] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [newGuest, setNewGuest] = useState({ first_name: '', last_name: '' })
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
+  const [isImporting, setIsImporting] = useState(false)
+  const [importResult, setImportResult] = useState<{
+    imported: number
+    skipped: number
+    errors: string[]
+  } | null>(null)
 
   useEffect(() => {
     loadGuests()
@@ -61,6 +71,7 @@ export default function GuestList() {
       id: guest.id,
       first_name: guest.first_name,
       last_name: guest.last_name,
+      enabled: guest.enabled,
     })
     setActionMessage(null)
   }
@@ -70,6 +81,7 @@ export default function GuestList() {
       id: null,
       first_name: '',
       last_name: '',
+      enabled: true,
     })
   }
 
@@ -81,6 +93,7 @@ export default function GuestList() {
     const result = await updateGuest(editState.id, {
       first_name: editState.first_name,
       last_name: editState.last_name,
+      enabled: editState.enabled,
     })
     setIsSaving(false)
 
@@ -140,10 +153,11 @@ export default function GuestList() {
 
   const handleExport = () => {
     // Convert guests to CSV format
-    const headers = ['First Name', 'Last Name', 'Created At', 'Updated At']
+    const headers = ['First Name', 'Last Name', 'Enabled', 'Created At', 'Updated At']
     const rows = guests.map((guest) => [
       guest.first_name,
       guest.last_name,
+      guest.enabled ? 'Yes' : 'No',
       new Date(guest.created_at).toLocaleString(),
       guest.updated_at ? new Date(guest.updated_at).toLocaleString() : '—',
     ])
@@ -165,6 +179,56 @@ export default function GuestList() {
     window.URL.revokeObjectURL(url)
   }
 
+  const handleImportCSV = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.name.endsWith('.csv')) {
+      setImportResult({
+        imported: 0,
+        skipped: 0,
+        errors: ['Please upload a CSV file.'],
+      })
+      return
+    }
+
+    setIsImporting(true)
+    setImportResult(null)
+
+    try {
+      const csvData = await file.text()
+      const result = await importGuestsFromCSV(csvData)
+      setImportResult(result)
+      
+      if (result.imported > 0) {
+        await loadGuests()
+        setActionMessage(`Successfully imported ${result.imported} guest(s).`)
+      }
+    } catch (error) {
+      console.error('Error reading CSV:', error)
+      setImportResult({
+        imported: 0,
+        skipped: 0,
+        errors: ['Failed to read CSV file.'],
+      })
+    } finally {
+      setIsImporting(false)
+      // Reset file input
+      e.target.value = ''
+    }
+  }
+
+  const handleOpenImportModal = () => {
+    setImportResult(null)
+    setIsImportModalOpen(true)
+  }
+
+  // Calculate counts
+  const totalGuests = guests.length
+  const enabledGuests = guests.filter((g) => g.enabled).length
+  const disabledGuests = guests.filter((g) => !g.enabled).length
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-8">
       <div className="mb-4 flex flex-wrap gap-3 justify-between items-center">
@@ -177,12 +241,34 @@ export default function GuestList() {
             Add Guest
           </button>
           <button
+            onClick={handleOpenImportModal}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200"
+          >
+            Import CSV
+          </button>
+          <button
             onClick={handleExport}
             disabled={guests.length === 0}
             className="bg-wedding-maroon/80 text-white px-4 py-2 rounded-lg font-semibold hover:bg-wedding-maroon transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Export CSV
           </button>
+        </div>
+      </div>
+
+      {/* Count Cards */}
+      <div className="mb-6 flex gap-4 flex-wrap">
+        <div className="bg-wedding-beige p-4 rounded-lg flex-1 min-w-[200px]">
+          <div className="text-sm text-wedding-maroon-dark">Total Guests</div>
+          <div className="text-2xl font-bold text-wedding-maroon-dark">{totalGuests}</div>
+        </div>
+        <div className="bg-green-50 p-4 rounded-lg flex-1 min-w-[200px]">
+          <div className="text-sm text-green-700">Enabled</div>
+          <div className="text-2xl font-bold text-green-800">{enabledGuests}</div>
+        </div>
+        <div className="bg-red-50 p-4 rounded-lg flex-1 min-w-[200px]">
+          <div className="text-sm text-red-700">Disabled</div>
+          <div className="text-2xl font-bold text-red-800">{disabledGuests}</div>
         </div>
       </div>
 
@@ -208,6 +294,9 @@ export default function GuestList() {
                 </th>
                 <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
                   Last Name
+                </th>
+                <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
+                  Status
                 </th>
                 <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
                   Created
@@ -255,6 +344,36 @@ export default function GuestList() {
                       />
                     ) : (
                       guest.last_name
+                    )}
+                  </td>
+                  <td className="border border-wedding-beige-dark px-4 py-2 text-wedding-maroon">
+                    {editState.id === guest.id ? (
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={editState.enabled}
+                          onChange={(e) =>
+                            setEditState((prev) => ({
+                              ...prev,
+                              enabled: e.target.checked,
+                            }))
+                          }
+                          className="w-4 h-4 text-wedding-maroon focus:ring-wedding-maroon border-wedding-beige-dark rounded"
+                        />
+                        <span className="text-sm">
+                          {editState.enabled ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </label>
+                    ) : (
+                      <span
+                        className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${
+                          guest.enabled
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {guest.enabled ? 'Enabled' : 'Disabled'}
+                      </span>
                     )}
                   </td>
                   <td className="border border-wedding-beige-dark px-4 py-2 text-wedding-maroon">
@@ -385,6 +504,85 @@ export default function GuestList() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Import CSV Modal */}
+      {isImportModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="mb-4">
+              <h3 className="text-2xl font-serif text-wedding-maroon-dark">
+                Import Guests from CSV
+              </h3>
+              <p className="text-sm text-wedding-maroon mt-2">
+                Upload a CSV file with columns: <strong>first_name, last_name</strong>
+              </p>
+              <p className="text-xs text-wedding-maroon/70 mt-1">
+                Existing guests will be skipped. All imported guests will be enabled by default.
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label
+                htmlFor="csv_file"
+                className="block text-sm font-medium text-wedding-maroon-dark mb-2"
+              >
+                Select CSV File
+              </label>
+              <input
+                id="csv_file"
+                type="file"
+                accept=".csv"
+                onChange={handleImportCSV}
+                disabled={isImporting}
+                className="w-full px-4 py-2 border border-wedding-beige-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-wedding-maroon focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+            </div>
+
+            {isImporting && (
+              <div className="mb-4 p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-800">
+                Processing CSV file...
+              </div>
+            )}
+
+            {importResult && (
+              <div className="mb-4 space-y-2">
+                <div
+                  className={`p-3 rounded-lg border ${
+                    importResult.imported > 0
+                      ? 'bg-green-50 border-green-200 text-green-800'
+                      : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+                  }`}
+                >
+                  <p className="font-semibold">Import Results:</p>
+                  <p className="text-sm">
+                    Imported: {importResult.imported} | Skipped: {importResult.skipped}
+                  </p>
+                </div>
+                {importResult.errors.length > 0 && (
+                  <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 max-h-40 overflow-y-auto">
+                    <p className="font-semibold text-sm mb-1">Errors:</p>
+                    <ul className="text-xs list-disc list-inside space-y-1">
+                      {importResult.errors.map((error, idx) => (
+                        <li key={idx}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setIsImportModalOpen(false)}
+                className="flex-1 border border-wedding-beige-dark text-wedding-maroon px-4 py-2 rounded-lg font-semibold hover:bg-wedding-beige-light transition-colors duration-200"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

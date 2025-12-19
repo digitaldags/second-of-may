@@ -33,7 +33,7 @@ export default function VenueDetails() {
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-start">
-                        <div className="space-y-6">
+                        <div className="space-y-6 order-1">
                             <div>
                                 <h3 className="text-2xl font-semibold text-wedding-maroon-dark mb-3">
                                     Iglesia Ni Cristo – Locale of Pasay
@@ -55,10 +55,33 @@ export default function VenueDetails() {
                                         15–20 minutes early to be seated before the ceremony begins.
                                     </p>
                                 </div>
+
+                                {/* QR Code Card - Hidden on mobile, shown on desktop */}
+                                <div className="hidden md:block mt-6 bg-wedding-beige-light/50 border border-wedding-beige-dark rounded-lg p-4 shadow-sm">
+                                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                                        <div className="flex-shrink-0 bg-white p-2 rounded-lg shadow-sm">
+                                            <Image
+                                                src="/qr-church.png"
+                                                alt="QR Code for Church Directions"
+                                                width={96}
+                                                height={96}
+                                                className="w-24 h-24"
+                                            />
+                                        </div>
+                                        <div className="text-center sm:text-left">
+                                            <p className="text-base font-serif text-wedding-maroon-dark mb-1">
+                                                Scan for Directions
+                                            </p>
+                                            <p className="text-xs text-wedding-maroon/70">
+                                                Opens in Google Maps
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="w-full">
+                        <div className="w-full order-2">
                             <div className="rounded-xl overflow-hidden shadow-lg relative aspect-[4/3]">
                                 <Image
                                     src="/church-ceremony.jpg"
@@ -67,6 +90,31 @@ export default function VenueDetails() {
                                     className="object-cover"
                                     sizes="(max-width: 768px) 100vw, 50vw"
                                 />
+                            </div>
+                        </div>
+
+                        {/* QR Code Card - Shown on mobile only, appears after image */}
+                        <div className="block md:hidden order-3">
+                            <div className="bg-wedding-beige-light/50 border border-wedding-beige-dark rounded-lg p-4 shadow-sm">
+                                <div className="flex flex-col sm:flex-row items-center gap-4">
+                                    <div className="flex-shrink-0 bg-white p-2 rounded-lg shadow-sm">
+                                        <Image
+                                            src="/qr-church.png"
+                                            alt="QR Code for Church Directions"
+                                            width={96}
+                                            height={96}
+                                            className="w-24 h-24"
+                                        />
+                                    </div>
+                                    <div className="text-center sm:text-left">
+                                        <p className="text-base font-serif text-wedding-maroon-dark mb-1">
+                                            Scan for Directions
+                                        </p>
+                                        <p className="text-xs text-wedding-maroon/70">
+                                            Opens in Google Maps
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -89,20 +137,6 @@ export default function VenueDetails() {
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-start">
-                        <div className="space-y-6 order-2 md:order-1">
-                            <div className="w-full">
-                                <div className="rounded-xl overflow-hidden shadow-lg relative aspect-[4/3]">
-                                    <Image
-                                        src="/reception-hotel.jpg"
-                                        alt="Admiral M Gallery Hotel"
-                                        fill
-                                        className="object-cover"
-                                        sizes="(max-width: 768px) 100vw, 50vw"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
                         <div className="space-y-6 order-1 md:order-2">
                             <div>
                                 <h3 className="text-2xl font-semibold text-wedding-maroon-dark mb-3">
@@ -121,6 +155,66 @@ export default function VenueDetails() {
                                         Join us for dinner, dancing, and celebration as we begin our
                                         journey together as husband and wife.
                                     </p>
+                                </div>
+
+                                {/* QR Code Card - Hidden on mobile, shown on desktop */}
+                                <div className="hidden md:block mt-6 bg-white/80 border border-wedding-beige-dark rounded-lg p-4 shadow-sm">
+                                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                                        <div className="flex-shrink-0 bg-white p-2 rounded-lg shadow-sm">
+                                            <Image
+                                                src="/qr-reception.png"
+                                                alt="QR Code for Reception Directions"
+                                                width={96}
+                                                height={96}
+                                                className="w-24 h-24"
+                                            />
+                                        </div>
+                                        <div className="text-center sm:text-left">
+                                            <p className="text-base font-serif text-wedding-maroon-dark mb-1">
+                                                Scan for Directions
+                                            </p>
+                                            <p className="text-xs text-wedding-maroon/70">
+                                                Opens in Google Maps
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="w-full order-2 md:order-1">
+                            <div className="rounded-xl overflow-hidden shadow-lg relative aspect-[4/3]">
+                                <Image
+                                    src="/reception-hotel.jpg"
+                                    alt="Admiral M Gallery Hotel"
+                                    fill
+                                    className="object-cover"
+                                    sizes="(max-width: 768px) 100vw, 50vw"
+                                />
+                            </div>
+                        </div>
+
+                        {/* QR Code Card - Shown on mobile only, appears after image */}
+                        <div className="block md:hidden order-3">
+                            <div className="bg-white/80 border border-wedding-beige-dark rounded-lg p-4 shadow-sm">
+                                <div className="flex flex-col sm:flex-row items-center gap-4">
+                                    <div className="flex-shrink-0 bg-white p-2 rounded-lg shadow-sm">
+                                        <Image
+                                            src="/qr-reception.png"
+                                            alt="QR Code for Reception Directions"
+                                            width={96}
+                                            height={96}
+                                            className="w-24 h-24"
+                                        />
+                                    </div>
+                                    <div className="text-center sm:text-left">
+                                        <p className="text-base font-serif text-wedding-maroon-dark mb-1">
+                                            Scan for Directions
+                                        </p>
+                                        <p className="text-xs text-wedding-maroon/70">
+                                            Opens in Google Maps
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>

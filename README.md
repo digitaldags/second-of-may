@@ -6,6 +6,7 @@ A beautiful wedding RSVP website built with Next.js, TypeScript, and Tailwind CS
 
 - 🎉 **Landing Page** - Beautiful wedding details page
 - 📝 **RSVP Form** - Easy-to-use form for guests to submit their RSVP
+- ✅ **Confirmation Page** - Instant confirmation with event details after RSVP
 - 🔐 **Admin Dashboard** - Protected dashboard to view and export RSVPs
 - 🎨 **Elegant Design** - Beige and maroon color theme with modern UI
 - ✅ **Form Validation** - Client and server-side validation

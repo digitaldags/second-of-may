@@ -6,6 +6,7 @@
 'use server'
 
 import { supabase } from '@/lib/supabase'
+import { generateConfirmationToken } from '@/lib/confirmation'
 import type { Database, RSVPFormData } from '@/lib/types'
 import { checkGuestExists } from '@/app/actions/guests'
 
@@ -28,7 +29,8 @@ async function hasExistingRSVP(first_name: string, last_name: string) {
 export interface ActionResult {
   success: boolean
   error?: string
-  data?: unknown
+  data?: { id: string; [key: string]: any }
+  token?: string
 }
 
 /**
@@ -105,7 +107,7 @@ export async function submitRSVP(formData: RSVPFormData): Promise<ActionResult> 
       .select()
       .single()
 
-    if (error) {
+    if (error || !data) {
       console.error('Supabase error:', error)
       return {
         success: false,
@@ -113,9 +115,14 @@ export async function submitRSVP(formData: RSVPFormData): Promise<ActionResult> 
       }
     }
 
+    // Generate confirmation token on the server
+    // Cast data to any to access id property
+    const token = generateConfirmationToken((data as any).id)
+
     return {
       success: true,
       data,
+      token,
     }
   } catch (error) {
     console.error('Server action error:', error)

@@ -6,10 +6,12 @@
 'use client'
 
 import { useState, FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import { submitRSVP } from '@/app/actions/rsvp'
 import type { RSVPFormData } from '@/lib/types'
 
 export default function RSVPForm() {
+  const router = useRouter()
   const [formData, setFormData] = useState<RSVPFormData>({
     first_name: '',
     last_name: '',
@@ -27,24 +29,33 @@ export default function RSVPForm() {
     setMessage(null)
     setShowErrorModal(false)
 
-    const result = await submitRSVP(formData)
+    try {
+      const result = await submitRSVP(formData)
 
-    if (result.success) {
-      setMessage({ type: 'success', text: 'Thank you! Your RSVP has been submitted.' })
-      setFormData({ first_name: '', last_name: '', email: '', attending: true, attendance_type: 'both' })
-    } else {
-      // Show error modal if guest not in list
-      if (
-        result.error?.includes('not in our guest list') ||
-        result.error?.includes('guest list')
-      ) {
-        setShowErrorModal(true)
+      if (result.success && result.token) {
+        // Redirect to confirmation page with token from server
+        router.push(`/confirmation/${result.token}`)
+        // Note: Don't reset isSubmitting here as we're redirecting away
       } else {
-        setMessage({ type: 'error', text: result.error || 'Something went wrong. Please try again.' })
+        // Show error modal if guest not in list
+        if (
+          result.error?.includes('not in our guest list') ||
+          result.error?.includes('guest list')
+        ) {
+          setShowErrorModal(true)
+        } else {
+          setMessage({ type: 'error', text: result.error || 'Something went wrong. Please try again.' })
+        }
+        setIsSubmitting(false)
       }
+    } catch (error) {
+      console.error('Form submission error:', error)
+      setMessage({ 
+        type: 'error', 
+        text: 'An unexpected error occurred. Please try again or contact us for assistance.' 
+      })
+      setIsSubmitting(false)
     }
-
-    setIsSubmitting(false)
   }
 
   return (
@@ -201,7 +212,10 @@ export default function RSVPForm() {
               Your name is not in our guest list. Please contact us if you believe this is an error.
             </p>
             <button
-              onClick={() => setShowErrorModal(false)}
+              onClick={() => {
+                setShowErrorModal(false)
+                setIsSubmitting(false)
+              }}
               className="w-full bg-wedding-maroon text-white px-6 py-2 rounded-lg font-semibold hover:bg-wedding-maroon-dark transition-colors duration-200"
             >
               Close

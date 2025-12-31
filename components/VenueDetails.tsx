@@ -16,7 +16,7 @@ export default function VenueDetails() {
     }, [])
 
     return (
-        <div className="w-full">
+        <div className="w-full" id="venue-details">
             {/* Ceremony Section */}
             <section className="w-full bg-white py-20 md:py-32">
                 <div

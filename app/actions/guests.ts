@@ -64,11 +64,11 @@ export async function checkGuestExists(
 /**
  * Update an existing guest
  * @param id - Guest ID
- * @param updates - Fields to update (first_name, last_name, enabled)
+ * @param updates - Fields to update (first_name, last_name, enabled, is_inc)
  */
 export async function updateGuest(
   id: string,
-  updates: Partial<Pick<Guest, 'first_name' | 'last_name' | 'enabled'>>
+  updates: Partial<Pick<Guest, 'first_name' | 'last_name' | 'enabled' | 'is_inc'>>
 ): Promise<{ success: boolean; error?: string }> {
   try {
     type GuestUpdate = Database['public']['Tables']['guest_list']['Update'] & {
@@ -89,6 +89,10 @@ export async function updateGuest(
 
     if (typeof updates.enabled === 'boolean') {
       payload.enabled = updates.enabled
+    }
+
+    if (typeof updates.is_inc === 'boolean') {
+      payload.is_inc = updates.is_inc
     }
 
     const { error } = await (supabase as any)
@@ -168,7 +172,8 @@ async function checkGuestExistsAny(
 export async function createGuest(
   first_name: string,
   last_name: string,
-  enabled: boolean = true
+  enabled: boolean = true,
+  is_inc: boolean = false
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const trimmedFirst = first_name.trim()
@@ -196,6 +201,7 @@ export async function createGuest(
       first_name: trimmedFirst,
       last_name: trimmedLast,
       enabled,
+      is_inc,
     }
 
     const { error } = await supabase
@@ -299,6 +305,7 @@ export async function importGuestsFromCSV(csvData: string): Promise<{
         first_name: first_name.trim(),
         last_name: last_name.trim(),
         enabled: true,
+        is_inc: false,
       }
 
       const { error } = await supabase

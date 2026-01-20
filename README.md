@@ -46,6 +46,7 @@ CREATE TABLE guest_list (
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
   enabled BOOLEAN NOT NULL DEFAULT true,
+  is_inc BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -66,6 +67,7 @@ CREATE TABLE rsvps (
 CREATE INDEX idx_guest_list_first_name ON guest_list(first_name);
 CREATE INDEX idx_guest_list_last_name ON guest_list(last_name);
 CREATE INDEX idx_guest_list_enabled ON guest_list(enabled);
+CREATE INDEX idx_guest_list_is_inc ON guest_list(is_inc);
 CREATE INDEX idx_guest_list_created_at ON guest_list(created_at);
 CREATE INDEX idx_guest_list_updated_at ON guest_list(updated_at);
 
@@ -170,6 +172,8 @@ The `guest_list` table stores pre-approved guests:
 - `id` (UUID) - Primary key
 - `first_name` (TEXT) - Guest first name
 - `last_name` (TEXT) - Guest last name
+- `enabled` (BOOLEAN) - Whether the guest is enabled to RSVP (default: true)
+- `is_inc` (BOOLEAN) - Whether the guest is an INC (Iglesia Ni Cristo) member (default: false)
 - `created_at` (TIMESTAMP) - When the guest was added
 - `updated_at` (TIMESTAMP) - When the guest was last edited
 
@@ -207,6 +211,29 @@ The application includes a comprehensive guest list validation and management fe
   - Existing guests are automatically skipped
   - Import results show counts and any errors
 - **CSV Export**: Export the entire guest list with all fields including status
+
+## Church Reminders Feature
+
+The application displays contextual worship etiquette reminders for non-INC guests attending the church ceremony:
+
+### How It Works
+- **Automatic Display**: Church reminders appear on the RSVP confirmation page only for guests who:
+  - Are attending the church ceremony (`church` or `both` attendance types)
+  - AND are tagged as `is_inc = false` in the guest list
+- **INC Members**: Do not see these reminders as they are already familiar with the worship practices
+- **Graceful Fallback**: If guest data cannot be resolved, the reminder section is safely omitted
+
+### Admin Management
+- The `is_inc` field can be edited via the Guest List admin page (`/admin/guests`)
+- Field appears as a checkbox labeled "INC Member" in both edit mode and table view
+- Exported CSV files include the INC Member status
+
+### Reminder Content
+The current reminders inform non-INC guests that during the worship service, Iglesia Ni Cristo members are expected to:
+- Close their eyes during prayers
+- Respond with "Yes" or "Amen" in unison as led by the minister
+
+The reminder component (`components/ChurchReminders.tsx`) is designed to be easily extensible for additional reminders in the future.
 
 ## Customization
 

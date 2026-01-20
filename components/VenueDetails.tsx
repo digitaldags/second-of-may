@@ -186,7 +186,7 @@ export default function VenueDetails() {
                             <div className="rounded-xl overflow-hidden shadow-lg relative aspect-[4/3]">
                                 <Image
                                     src="/reception-hotel.jpg"
-                                    alt="Admiral M Gallery Hotel"
+                                    alt="Admiral Hotel Manila – MGallery"
                                     fill
                                     className="object-cover"
                                     sizes="(max-width: 768px) 100vw, 50vw"

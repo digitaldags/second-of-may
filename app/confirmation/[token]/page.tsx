@@ -8,6 +8,10 @@ import Link from 'next/link'
 import { getRSVPByToken } from '@/app/actions/confirmation'
 import VenueInfo from '@/components/VenueInfo'
 
+// Force dynamic rendering - no caching
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 interface ConfirmationPageProps {
   params: {
     token: string
@@ -111,7 +115,7 @@ export default async function ConfirmationPage({ params }: ConfirmationPageProps
             <h2 className="text-2xl font-serif text-wedding-maroon-dark mb-4 text-center">
               Event Details
             </h2>
-            <VenueInfo attendanceType={rsvp.attendance_type} />
+            <VenueInfo attendanceType={rsvp.attendance_type} isInc={rsvp.guest_is_inc} />
           </div>
         )}
 

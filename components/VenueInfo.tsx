@@ -4,14 +4,17 @@
  */
 
 import type { AttendanceType } from '@/lib/types'
+import ChurchReminders from '@/components/ChurchReminders'
 
 interface VenueInfoProps {
   attendanceType: AttendanceType
+  isInc?: boolean
 }
 
-export default function VenueInfo({ attendanceType }: VenueInfoProps) {
+export default function VenueInfo({ attendanceType, isInc = false }: VenueInfoProps) {
   const showChurch = attendanceType === 'church' || attendanceType === 'both'
   const showReception = attendanceType === 'reception' || attendanceType === 'both'
+  const showChurchReminders = showChurch && !isInc
 
   return (
     <div className="space-y-8">
@@ -40,6 +43,10 @@ export default function VenueInfo({ attendanceType }: VenueInfoProps) {
         </div>
       )}
 
+      {showChurchReminders && (
+        <ChurchReminders />
+      )}
+
       {showReception && (
         <div className="bg-wedding-beige-light border-l-4 border-wedding-maroon p-6 rounded-r-lg shadow-sm">
           <h3 className="text-xl font-serif text-wedding-maroon-dark mb-4">
@@ -47,7 +54,7 @@ export default function VenueInfo({ attendanceType }: VenueInfoProps) {
           </h3>
           <div className="space-y-2 text-wedding-maroon">
             <p>
-              <span className="font-semibold">Venue:</span> Admiral M Gallery Hotel
+              <span className="font-semibold">Venue:</span> Admiral Hotel Manila – MGallery
             </p>
             <p>
               <span className="font-semibold">Location:</span> Roxas Boulevard, Manila

@@ -15,7 +15,7 @@ const faqs: FAQItem[] = [
   {
     question: 'We will be going to the church, what time should we arrive?',
     answer:
-      'We kindly ask our guests to arrive at the church by 2:45 PM so we can begin the ceremony on time and maintain its solemn atmosphere.',
+      'We kindly ask our guests to arrive at the church by 2:00 PM so we can begin the ceremony on time and maintain its solemn atmosphere.',
   },
   {
     question: 'Where should I park?',

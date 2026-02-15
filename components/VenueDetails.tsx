@@ -47,7 +47,7 @@ export default function VenueDetails() {
                                 </p>
                                 <p className="text-wedding-maroon mb-4">
                                     <span className="font-medium">Time:</span> Ceremony starts at
-                                    3:00 PM
+                                    2:15 PM
                                 </p>
                                 <div className="bg-wedding-beige-light border-l-4 border-wedding-maroon p-4 rounded-r-lg">
                                     <p className="text-sm text-wedding-maroon-dark">

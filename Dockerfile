@@ -17,6 +17,14 @@ COPY . .
 
 ENV NODE_ENV=production
 
+# Accept build arguments for environment variables
+ARG SUPABASE_URL
+ARG SUPABASE_KEY
+
+# Set them as environment variables for the build process
+ENV SUPABASE_URL=$SUPABASE_URL
+ENV SUPABASE_KEY=$SUPABASE_KEY
+
 RUN npm run build
 
 FROM node:20-alpine AS runner
@@ -28,6 +36,14 @@ ENV NODE_ENV=production
 # Next.js uses this at runtime
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+
+# Accept runtime environment variables
+ARG SUPABASE_URL
+ARG SUPABASE_KEY
+
+# Set them as environment variables for runtime
+ENV SUPABASE_URL=$SUPABASE_URL
+ENV SUPABASE_KEY=$SUPABASE_KEY
 
 RUN apk add --no-cache libc6-compat
 

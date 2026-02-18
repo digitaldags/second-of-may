@@ -9,6 +9,8 @@ import { useEffect, useState } from 'react'
 import { deleteRSVP, getRSVPsPaginated, getAllRSVPsForExport, updateRSVP } from '@/app/actions/rsvps'
 import type { AttendanceType, RSVP } from '@/lib/types'
 
+type RSVPSortColumn = 'first_name' | 'last_name' | 'email' | 'attending' | 'attendance_type' | 'created_at' | 'updated_at'
+
 interface EditState {
   id: string | null
   first_name: string
@@ -42,19 +44,21 @@ export default function AdminDashboard() {
   const [totalChurch, setTotalChurch] = useState(0)
   const [totalReception, setTotalReception] = useState(0)
   const [totalBoth, setTotalBoth] = useState(0)
+  const [sortColumn, setSortColumn] = useState<RSVPSortColumn>('created_at')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const PAGE_SIZE = 15
 
   useEffect(() => {
     loadRSVPs()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, attendanceFilter])
+  }, [currentPage, attendanceFilter, sortColumn, sortDirection])
 
   const loadRSVPs = async () => {
     setIsLoading(true)
     setError(null)
     setActionMessage(null)
     try {
-      const result = await getRSVPsPaginated(currentPage, PAGE_SIZE, attendanceFilter)
+      const result = await getRSVPsPaginated(currentPage, PAGE_SIZE, attendanceFilter, sortColumn, sortDirection)
       setRsvps(result.data)
       setTotalFiltered(result.totalFiltered)
       setTotalAll(result.totalAll)
@@ -69,6 +73,16 @@ export default function AdminDashboard() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleSort = (column: RSVPSortColumn) => {
+    if (column === sortColumn) {
+      setSortDirection((d: 'asc' | 'desc') => d === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
+    }
+    setCurrentPage(0)
   }
 
   const startEdit = (rsvp: RSVP) => {
@@ -293,26 +307,54 @@ export default function AdminDashboard() {
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-wedding-beige">
-                <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
-                  First Name
+                <th
+                  onClick={() => handleSort('first_name')}
+                  className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark cursor-pointer select-none hover:bg-wedding-beige whitespace-nowrap"
+                >
+                  First Name{' '}
+                  <span className="text-xs">{sortColumn === 'first_name' ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}</span>
                 </th>
-                <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
-                  Last Name
+                <th
+                  onClick={() => handleSort('last_name')}
+                  className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark cursor-pointer select-none hover:bg-wedding-beige whitespace-nowrap"
+                >
+                  Last Name{' '}
+                  <span className="text-xs">{sortColumn === 'last_name' ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}</span>
                 </th>
-                <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
-                  Email
+                <th
+                  onClick={() => handleSort('email')}
+                  className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark cursor-pointer select-none hover:bg-wedding-beige whitespace-nowrap"
+                >
+                  Email{' '}
+                  <span className="text-xs">{sortColumn === 'email' ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}</span>
                 </th>
-                <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
-                  Attending
+                <th
+                  onClick={() => handleSort('attending')}
+                  className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark cursor-pointer select-none hover:bg-wedding-beige whitespace-nowrap"
+                >
+                  Attending{' '}
+                  <span className="text-xs">{sortColumn === 'attending' ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}</span>
                 </th>
-                <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
-                  Attendance Type
+                <th
+                  onClick={() => handleSort('attendance_type')}
+                  className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark cursor-pointer select-none hover:bg-wedding-beige whitespace-nowrap"
+                >
+                  Attendance Type{' '}
+                  <span className="text-xs">{sortColumn === 'attendance_type' ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}</span>
                 </th>
-                <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
-                  Submitted
+                <th
+                  onClick={() => handleSort('created_at')}
+                  className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark cursor-pointer select-none hover:bg-wedding-beige whitespace-nowrap"
+                >
+                  Submitted{' '}
+                  <span className="text-xs">{sortColumn === 'created_at' ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}</span>
                 </th>
-                <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
-                  Updated
+                <th
+                  onClick={() => handleSort('updated_at')}
+                  className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark cursor-pointer select-none hover:bg-wedding-beige whitespace-nowrap"
+                >
+                  Updated{' '}
+                  <span className="text-xs">{sortColumn === 'updated_at' ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}</span>
                 </th>
                 <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
                   Actions

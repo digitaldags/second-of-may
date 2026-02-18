@@ -11,10 +11,14 @@ import type { Database, Guest } from '@/lib/types'
  * Fetch a page of guests from the database
  * @param page - Zero-based page index
  * @param pageSize - Number of rows per page
+ * @param sortColumn - Column to sort by
+ * @param sortDirection - Sort direction ('asc' | 'desc')
  */
 export async function getGuestsPaginated(
   page: number,
-  pageSize: number
+  pageSize: number,
+  sortColumn: 'first_name' | 'last_name' | 'enabled' | 'is_inc' | 'created_at' | 'updated_at' = 'created_at',
+  sortDirection: 'asc' | 'desc' = 'desc'
 ): Promise<{
   data: Guest[]
   total: number
@@ -29,7 +33,7 @@ export async function getGuestsPaginated(
       supabase
         .from('guest_list')
         .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false })
+        .order(sortColumn, { ascending: sortDirection === 'asc' })
         .range(from, to),
       supabase
         .from('guest_list')

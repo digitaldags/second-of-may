@@ -12,11 +12,15 @@ import type { Database, RSVP } from '@/lib/types'
  * @param page - Zero-based page index
  * @param pageSize - Number of rows per page
  * @param filter - Attendance type filter ('all' | 'church' | 'reception' | 'both')
+ * @param sortColumn - Column to sort by
+ * @param sortDirection - Sort direction ('asc' | 'desc')
  */
 export async function getRSVPsPaginated(
   page: number,
   pageSize: number,
-  filter: 'all' | 'church' | 'reception' | 'both'
+  filter: 'all' | 'church' | 'reception' | 'both',
+  sortColumn: 'first_name' | 'last_name' | 'email' | 'attending' | 'attendance_type' | 'created_at' | 'updated_at' = 'created_at',
+  sortDirection: 'asc' | 'desc' = 'desc'
 ): Promise<{
   data: RSVP[]
   totalFiltered: number
@@ -35,7 +39,7 @@ export async function getRSVPsPaginated(
     let pageQuery = supabase
       .from('rsvps')
       .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
+      .order(sortColumn, { ascending: sortDirection === 'asc' })
       .range(from, to)
 
     if (filter !== 'all') {

@@ -16,6 +16,8 @@ import {
 } from '@/app/actions/guests'
 import type { Guest } from '@/lib/types'
 
+type GuestSortColumn = 'first_name' | 'last_name' | 'enabled' | 'is_inc' | 'created_at' | 'updated_at'
+
 interface EditState {
   id: string | null
   first_name: string
@@ -53,19 +55,21 @@ export default function GuestList() {
   const [totalCount, setTotalCount] = useState(0)
   const [totalEnabled, setTotalEnabled] = useState(0)
   const [totalDisabled, setTotalDisabled] = useState(0)
+  const [sortColumn, setSortColumn] = useState<GuestSortColumn>('created_at')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const PAGE_SIZE = 15
 
   useEffect(() => {
     loadGuests()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage])
+  }, [currentPage, sortColumn, sortDirection])
 
   const loadGuests = async () => {
     setIsLoading(true)
     setError(null)
     setActionMessage(null)
     try {
-      const result = await getGuestsPaginated(currentPage, PAGE_SIZE)
+      const result = await getGuestsPaginated(currentPage, PAGE_SIZE, sortColumn, sortDirection)
       setGuests(result.data)
       setTotalCount(result.total)
       setTotalEnabled(result.totalEnabled)
@@ -76,6 +80,16 @@ export default function GuestList() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleSort = (column: GuestSortColumn) => {
+    if (column === sortColumn) {
+      setSortDirection((d: 'asc' | 'desc') => d === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
+    }
+    setCurrentPage(0)
   }
 
   const startEdit = (guest: Guest) => {
@@ -318,23 +332,47 @@ export default function GuestList() {
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-wedding-beige">
-                <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
-                  First Name
+                <th
+                  onClick={() => handleSort('first_name')}
+                  className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark cursor-pointer select-none hover:bg-wedding-beige whitespace-nowrap"
+                >
+                  First Name{' '}
+                  <span className="text-xs">{sortColumn === 'first_name' ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}</span>
                 </th>
-                <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
-                  Last Name
+                <th
+                  onClick={() => handleSort('last_name')}
+                  className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark cursor-pointer select-none hover:bg-wedding-beige whitespace-nowrap"
+                >
+                  Last Name{' '}
+                  <span className="text-xs">{sortColumn === 'last_name' ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}</span>
                 </th>
-                <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
-                  Status
+                <th
+                  onClick={() => handleSort('enabled')}
+                  className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark cursor-pointer select-none hover:bg-wedding-beige whitespace-nowrap"
+                >
+                  Status{' '}
+                  <span className="text-xs">{sortColumn === 'enabled' ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}</span>
                 </th>
-                <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
-                  INC Member
+                <th
+                  onClick={() => handleSort('is_inc')}
+                  className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark cursor-pointer select-none hover:bg-wedding-beige whitespace-nowrap"
+                >
+                  INC Member{' '}
+                  <span className="text-xs">{sortColumn === 'is_inc' ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}</span>
                 </th>
-                <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
-                  Created
+                <th
+                  onClick={() => handleSort('created_at')}
+                  className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark cursor-pointer select-none hover:bg-wedding-beige whitespace-nowrap"
+                >
+                  Created{' '}
+                  <span className="text-xs">{sortColumn === 'created_at' ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}</span>
                 </th>
-                <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
-                  Updated
+                <th
+                  onClick={() => handleSort('updated_at')}
+                  className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark cursor-pointer select-none hover:bg-wedding-beige whitespace-nowrap"
+                >
+                  Updated{' '}
+                  <span className="text-xs">{sortColumn === 'updated_at' ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}</span>
                 </th>
                 <th className="border border-wedding-beige-dark px-4 py-2 text-left text-wedding-maroon-dark">
                   Actions

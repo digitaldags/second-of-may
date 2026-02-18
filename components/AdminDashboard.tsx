@@ -6,7 +6,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { deleteRSVP, getAllRSVPs, updateRSVP } from '@/app/actions/rsvps'
+import { deleteRSVP, getRSVPsPaginated, getAllRSVPsForExport, updateRSVP } from '@/app/actions/rsvps'
 import type { AttendanceType, RSVP } from '@/lib/types'
 
 interface EditState {
@@ -34,18 +34,35 @@ export default function AdminDashboard() {
   })
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [totalFiltered, setTotalFiltered] = useState(0)
+  const [totalAll, setTotalAll] = useState(0)
+  const [totalAttending, setTotalAttending] = useState(0)
+  const [totalNotAttending, setTotalNotAttending] = useState(0)
+  const [totalChurch, setTotalChurch] = useState(0)
+  const [totalReception, setTotalReception] = useState(0)
+  const [totalBoth, setTotalBoth] = useState(0)
+  const PAGE_SIZE = 15
 
   useEffect(() => {
     loadRSVPs()
-  }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, attendanceFilter])
 
   const loadRSVPs = async () => {
     setIsLoading(true)
     setError(null)
     setActionMessage(null)
     try {
-      const data = await getAllRSVPs()
-      setRsvps(data)
+      const result = await getRSVPsPaginated(currentPage, PAGE_SIZE, attendanceFilter)
+      setRsvps(result.data)
+      setTotalFiltered(result.totalFiltered)
+      setTotalAll(result.totalAll)
+      setTotalAttending(result.totalAttending)
+      setTotalNotAttending(result.totalNotAttending)
+      setTotalChurch(result.totalChurch)
+      setTotalReception(result.totalReception)
+      setTotalBoth(result.totalBoth)
     } catch (err) {
       setError('Failed to load RSVPs')
       console.error(err)
@@ -96,9 +113,9 @@ export default function AdminDashboard() {
       return
     }
 
-    await loadRSVPs()
     cancelEdit()
     setActionMessage('RSVP updated successfully.')
+    await loadRSVPs()
   }
 
   const handleDelete = async (id: string) => {
@@ -117,8 +134,12 @@ export default function AdminDashboard() {
       return
     }
 
-    await loadRSVPs()
     setActionMessage('RSVP deleted successfully.')
+    if (rsvps.length === 1 && currentPage > 0) {
+      setCurrentPage((p: number) => p - 1)
+    } else {
+      await loadRSVPs()
+    }
   }
 
   const getAttendanceTypeLabel = (type: AttendanceType) => {
@@ -134,10 +155,12 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleExport = () => {
-    // Convert RSVPs to CSV format
+  const handleExport = async () => {
+    const allRsvps = await getAllRSVPsForExport(attendanceFilter)
+    if (allRsvps.length === 0) return
+
     const headers = ['First Name', 'Last Name', 'Email', 'Attending', 'Attendance Type', 'Submitted At']
-    const rows = filteredRsvps.map((rsvp) => [
+    const rows = allRsvps.map((rsvp) => [
       rsvp.first_name,
       rsvp.last_name,
       rsvp.email,
@@ -151,7 +174,6 @@ export default function AdminDashboard() {
       ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
     ].join('\n')
 
-    // Create download link
     const blob = new Blob([csvContent], { type: 'text/csv' })
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -163,15 +185,6 @@ export default function AdminDashboard() {
     window.URL.revokeObjectURL(url)
   }
 
-  const attendingCount = rsvps.filter((r) => r.attending).length
-  const notAttendingCount = rsvps.filter((r) => !r.attending).length
-  const churchOnlyCount = rsvps.filter((r) => r.attending && r.attendance_type === 'church').length
-  const receptionOnlyCount = rsvps.filter((r) => r.attending && r.attendance_type === 'reception').length
-  const bothCount = rsvps.filter((r) => r.attending && r.attendance_type === 'both').length
-
-  const filteredRsvps = attendanceFilter === 'all' 
-    ? rsvps 
-    : rsvps.filter((r) => r.attending && r.attendance_type === attendanceFilter)
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-8">
@@ -182,15 +195,15 @@ export default function AdminDashboard() {
       <div className="mb-6 flex gap-4 flex-wrap">
         <div className="bg-wedding-beige-light p-4 rounded-lg flex-1 min-w-[200px]">
           <div className="text-sm text-wedding-maroon">Total RSVPs</div>
-          <div className="text-2xl font-bold text-wedding-maroon-dark">{rsvps.length}</div>
+          <div className="text-2xl font-bold text-wedding-maroon-dark">{totalAll}</div>
         </div>
         <div className="bg-green-50 p-4 rounded-lg flex-1 min-w-[200px]">
           <div className="text-sm text-green-700">Attending</div>
-          <div className="text-2xl font-bold text-green-800">{attendingCount}</div>
+          <div className="text-2xl font-bold text-green-800">{totalAttending}</div>
         </div>
         <div className="bg-red-50 p-4 rounded-lg flex-1 min-w-[200px]">
           <div className="text-sm text-red-700">Not Attending</div>
-          <div className="text-2xl font-bold text-red-800">{notAttendingCount}</div>
+          <div className="text-2xl font-bold text-red-800">{totalNotAttending}</div>
         </div>
       </div>
 
@@ -198,15 +211,15 @@ export default function AdminDashboard() {
       <div className="mb-6 flex gap-4 flex-wrap">
         <div className="bg-blue-50 p-4 rounded-lg flex-1 min-w-[200px]">
           <div className="text-sm text-blue-700">Church Only</div>
-          <div className="text-2xl font-bold text-blue-800">{churchOnlyCount}</div>
+          <div className="text-2xl font-bold text-blue-800">{totalChurch}</div>
         </div>
         <div className="bg-purple-50 p-4 rounded-lg flex-1 min-w-[200px]">
           <div className="text-sm text-purple-700">Reception Only</div>
-          <div className="text-2xl font-bold text-purple-800">{receptionOnlyCount}</div>
+          <div className="text-2xl font-bold text-purple-800">{totalReception}</div>
         </div>
         <div className="bg-yellow-50 p-4 rounded-lg flex-1 min-w-[200px]">
           <div className="text-sm text-yellow-700">Both Events</div>
-          <div className="text-2xl font-bold text-yellow-800">{bothCount}</div>
+          <div className="text-2xl font-bold text-yellow-800">{totalBoth}</div>
         </div>
       </div>
 
@@ -216,7 +229,34 @@ export default function AdminDashboard() {
           <label className="text-sm text-wedding-maroon-dark">Filter:</label>
           <select
             value={attendanceFilter}
-            onChange={(e) => setAttendanceFilter(e.target.value as 'all' | AttendanceType)}
+            onChange={(e) => {
+              const newFilter = e.target.value as 'all' | AttendanceType
+              setAttendanceFilter(newFilter)
+              if (currentPage === 0) {
+                // useEffect won't fire since currentPage didn't change; reload manually
+                // loadRSVPs reads stale attendanceFilter via closure, so we pass the new value directly
+                setIsLoading(true)
+                setError(null)
+                setActionMessage(null)
+                getRSVPsPaginated(0, PAGE_SIZE, newFilter).then((result) => {
+                  setRsvps(result.data)
+                  setTotalFiltered(result.totalFiltered)
+                  setTotalAll(result.totalAll)
+                  setTotalAttending(result.totalAttending)
+                  setTotalNotAttending(result.totalNotAttending)
+                  setTotalChurch(result.totalChurch)
+                  setTotalReception(result.totalReception)
+                  setTotalBoth(result.totalBoth)
+                }).catch((err) => {
+                  setError('Failed to load RSVPs')
+                  console.error(err)
+                }).finally(() => {
+                  setIsLoading(false)
+                })
+              } else {
+                setCurrentPage(0)
+              }
+            }}
             className="px-3 py-2 border border-wedding-beige-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-wedding-maroon focus:border-transparent bg-white text-wedding-maroon-dark"
           >
             <option value="all">All Attendees</option>
@@ -226,7 +266,7 @@ export default function AdminDashboard() {
           </select>
           <button
             onClick={handleExport}
-            disabled={rsvps.length === 0}
+            disabled={totalAll === 0}
             className="bg-wedding-maroon text-white px-4 py-2 rounded-lg font-semibold hover:bg-wedding-maroon-dark transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Export CSV
@@ -244,9 +284,9 @@ export default function AdminDashboard() {
         <div className="text-center py-8 text-wedding-maroon">Loading...</div>
       ) : error ? (
         <div className="text-center py-8 text-red-600">{error}</div>
-      ) : rsvps.length === 0 ? (
+      ) : totalAll === 0 ? (
         <div className="text-center py-8 text-wedding-maroon">No RSVPs yet.</div>
-      ) : filteredRsvps.length === 0 ? (
+      ) : rsvps.length === 0 ? (
         <div className="text-center py-8 text-wedding-maroon">No RSVPs match the selected filter.</div>
       ) : (
         <div className="overflow-x-auto">
@@ -280,7 +320,7 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {filteredRsvps.map((rsvp) => (
+              {rsvps.map((rsvp) => (
                 <tr key={rsvp.id} className="hover:bg-wedding-beige-light">
                   <td className="border border-wedding-beige-dark px-4 py-2 text-wedding-maroon">
                     {editState.id === rsvp.id ? (
@@ -428,6 +468,42 @@ export default function AdminDashboard() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination controls */}
+      {!isLoading && !error && totalAll > 0 && (
+        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-sm text-wedding-maroon">
+            Showing {currentPage * PAGE_SIZE + 1}–{Math.min((currentPage + 1) * PAGE_SIZE, totalFiltered)} of {totalFiltered} RSVP{totalFiltered !== 1 ? 's' : ''}
+            {attendanceFilter !== 'all' && ` (filtered from ${totalAll} total)`}
+          </p>
+          <div className="flex items-center gap-3">
+            {editState.id && (
+              <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-md">
+                Save or cancel your edit before changing pages.
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p: number) => p - 1)}
+              disabled={currentPage === 0 || isLoading || !!editState.id}
+              className="px-4 py-2 text-sm rounded-lg border border-wedding-beige-dark text-wedding-maroon hover:bg-wedding-beige-light disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-200"
+            >
+              ← Previous
+            </button>
+            <span className="text-sm text-wedding-maroon-dark font-medium">
+              Page {currentPage + 1} of {Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE))}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p: number) => p + 1)}
+              disabled={(currentPage + 1) * PAGE_SIZE >= totalFiltered || isLoading || !!editState.id}
+              className="px-4 py-2 text-sm rounded-lg border border-wedding-beige-dark text-wedding-maroon hover:bg-wedding-beige-light disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-200"
+            >
+              Next →
+            </button>
+          </div>
         </div>
       )}
     </div>

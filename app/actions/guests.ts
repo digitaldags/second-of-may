@@ -13,12 +13,14 @@ import type { Database, Guest } from '@/lib/types'
  * @param pageSize - Number of rows per page
  * @param sortColumn - Column to sort by
  * @param sortDirection - Sort direction ('asc' | 'desc')
+ * @param searchTerm - Optional search term matched against first_name or last_name
  */
 export async function getGuestsPaginated(
   page: number,
   pageSize: number,
   sortColumn: 'first_name' | 'last_name' | 'enabled' | 'is_inc' | 'created_at' | 'updated_at' = 'created_at',
-  sortDirection: 'asc' | 'desc' = 'desc'
+  sortDirection: 'asc' | 'desc' = 'desc',
+  searchTerm: string = ''
 ): Promise<{
   data: Guest[]
   total: number
@@ -28,13 +30,23 @@ export async function getGuestsPaginated(
   try {
     const from = page * pageSize
     const to = from + pageSize - 1
+    const trimmed = searchTerm.trim()
+
+    let pageQuery = supabase
+      .from('guest_list')
+      .select('*', { count: 'exact' })
+      .order(sortColumn, { ascending: sortDirection === 'asc' })
+
+    if (trimmed) {
+      pageQuery = pageQuery.or(
+        `first_name.ilike.%${trimmed}%,last_name.ilike.%${trimmed}%`
+      )
+    }
+
+    pageQuery = pageQuery.range(from, to)
 
     const [pageResult, enabledResult, disabledResult] = await Promise.all([
-      supabase
-        .from('guest_list')
-        .select('*', { count: 'exact' })
-        .order(sortColumn, { ascending: sortDirection === 'asc' })
-        .range(from, to),
+      pageQuery,
       supabase
         .from('guest_list')
         .select('id', { count: 'exact', head: true })

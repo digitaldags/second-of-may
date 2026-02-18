@@ -14,13 +14,15 @@ import type { Database, RSVP } from '@/lib/types'
  * @param filter - Attendance type filter ('all' | 'church' | 'reception' | 'both')
  * @param sortColumn - Column to sort by
  * @param sortDirection - Sort direction ('asc' | 'desc')
+ * @param searchTerm - Optional search term matched against first_name or last_name
  */
 export async function getRSVPsPaginated(
   page: number,
   pageSize: number,
   filter: 'all' | 'church' | 'reception' | 'both',
   sortColumn: 'first_name' | 'last_name' | 'email' | 'attending' | 'attendance_type' | 'created_at' | 'updated_at' = 'created_at',
-  sortDirection: 'asc' | 'desc' = 'desc'
+  sortDirection: 'asc' | 'desc' = 'desc',
+  searchTerm: string = ''
 ): Promise<{
   data: RSVP[]
   totalFiltered: number
@@ -35,16 +37,24 @@ export async function getRSVPsPaginated(
   try {
     const from = page * pageSize
     const to = from + pageSize - 1
+    const trimmed = searchTerm.trim()
 
     let pageQuery = supabase
       .from('rsvps')
       .select('*', { count: 'exact' })
       .order(sortColumn, { ascending: sortDirection === 'asc' })
-      .range(from, to)
 
     if (filter !== 'all') {
       pageQuery = pageQuery.eq('attending', true).eq('attendance_type', filter)
     }
+
+    if (trimmed) {
+      pageQuery = pageQuery.or(
+        `first_name.ilike.%${trimmed}%,last_name.ilike.%${trimmed}%`
+      )
+    }
+
+    pageQuery = pageQuery.range(from, to)
 
     const [pageResult, allResult, attendingResult, notAttendingResult, churchResult, receptionResult, bothResult] = await Promise.all([
       pageQuery,

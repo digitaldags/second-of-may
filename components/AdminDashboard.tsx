@@ -46,19 +46,29 @@ export default function AdminDashboard() {
   const [totalBoth, setTotalBoth] = useState(0)
   const [sortColumn, setSortColumn] = useState<RSVPSortColumn>('created_at')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const PAGE_SIZE = 15
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm)
+      setCurrentPage(0)
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [searchTerm])
 
   useEffect(() => {
     loadRSVPs()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, attendanceFilter, sortColumn, sortDirection])
+  }, [currentPage, attendanceFilter, sortColumn, sortDirection, debouncedSearch])
 
   const loadRSVPs = async () => {
     setIsLoading(true)
     setError(null)
     setActionMessage(null)
     try {
-      const result = await getRSVPsPaginated(currentPage, PAGE_SIZE, attendanceFilter, sortColumn, sortDirection)
+      const result = await getRSVPsPaginated(currentPage, PAGE_SIZE, attendanceFilter, sortColumn, sortDirection, debouncedSearch)
       setRsvps(result.data)
       setTotalFiltered(result.totalFiltered)
       setTotalAll(result.totalAll)
@@ -240,19 +250,40 @@ export default function AdminDashboard() {
       <div className="mb-4 flex justify-between items-center flex-wrap gap-4">
         <h2 className="text-xl font-semibold text-wedding-maroon-dark">RSVP List</h2>
         <div className="flex gap-2 items-center flex-wrap">
+          <div className="relative">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by name..."
+              className="pl-3 pr-8 py-2 border border-wedding-beige-dark rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-wedding-maroon focus:border-transparent bg-white text-wedding-maroon-dark"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-wedding-maroon/60 hover:text-wedding-maroon text-sm leading-none"
+              >
+                ✕
+              </button>
+            )}
+          </div>
           <label className="text-sm text-wedding-maroon-dark">Filter:</label>
           <select
             value={attendanceFilter}
             onChange={(e) => {
               const newFilter = e.target.value as 'all' | AttendanceType
               setAttendanceFilter(newFilter)
+              // Clear search when filter changes
+              setSearchTerm('')
+              setDebouncedSearch('')
               if (currentPage === 0) {
                 // useEffect won't fire since currentPage didn't change; reload manually
-                // loadRSVPs reads stale attendanceFilter via closure, so we pass the new value directly
+                // loadRSVPs reads stale state via closure, so we pass values directly
                 setIsLoading(true)
                 setError(null)
                 setActionMessage(null)
-                getRSVPsPaginated(0, PAGE_SIZE, newFilter).then((result) => {
+                getRSVPsPaginated(0, PAGE_SIZE, newFilter, sortColumn, sortDirection, '').then((result) => {
                   setRsvps(result.data)
                   setTotalFiltered(result.totalFiltered)
                   setTotalAll(result.totalAll)
@@ -300,6 +331,8 @@ export default function AdminDashboard() {
         <div className="text-center py-8 text-red-600">{error}</div>
       ) : totalAll === 0 ? (
         <div className="text-center py-8 text-wedding-maroon">No RSVPs yet.</div>
+      ) : rsvps.length === 0 && debouncedSearch ? (
+        <div className="text-center py-8 text-wedding-maroon">No RSVPs match your search.</div>
       ) : rsvps.length === 0 ? (
         <div className="text-center py-8 text-wedding-maroon">No RSVPs match the selected filter.</div>
       ) : (

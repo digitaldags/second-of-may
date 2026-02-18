@@ -57,19 +57,29 @@ export default function GuestList() {
   const [totalDisabled, setTotalDisabled] = useState(0)
   const [sortColumn, setSortColumn] = useState<GuestSortColumn>('created_at')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const PAGE_SIZE = 15
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm)
+      setCurrentPage(0)
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [searchTerm])
 
   useEffect(() => {
     loadGuests()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, sortColumn, sortDirection])
+  }, [currentPage, sortColumn, sortDirection, debouncedSearch])
 
   const loadGuests = async () => {
     setIsLoading(true)
     setError(null)
     setActionMessage(null)
     try {
-      const result = await getGuestsPaginated(currentPage, PAGE_SIZE, sortColumn, sortDirection)
+      const result = await getGuestsPaginated(currentPage, PAGE_SIZE, sortColumn, sortDirection, debouncedSearch)
       setGuests(result.data)
       setTotalCount(result.total)
       setTotalEnabled(result.totalEnabled)
@@ -276,7 +286,25 @@ export default function GuestList() {
     <div className="bg-white rounded-lg shadow-lg p-8">
       <div className="mb-4 flex flex-wrap gap-3 justify-between items-center">
         <h2 className="text-xl font-semibold text-wedding-maroon-dark">Guest List</h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="relative">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by name..."
+              className="pl-3 pr-8 py-2 border border-wedding-beige-dark rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-wedding-maroon focus:border-transparent bg-white text-wedding-maroon-dark"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-wedding-maroon/60 hover:text-wedding-maroon text-sm leading-none"
+              >
+                ✕
+              </button>
+            )}
+          </div>
           <button
             onClick={handleOpenAddModal}
             className="bg-wedding-maroon text-white px-4 py-2 rounded-lg font-semibold hover:bg-wedding-maroon-dark transition-colors duration-200"
@@ -325,8 +353,10 @@ export default function GuestList() {
         <div className="text-center py-8 text-wedding-maroon">Loading...</div>
       ) : error ? (
         <div className="text-center py-8 text-red-600">{error}</div>
-      ) : guests.length === 0 ? (
+      ) : guests.length === 0 && !debouncedSearch ? (
         <div className="text-center py-8 text-wedding-maroon">No guests yet.</div>
+      ) : guests.length === 0 ? (
+        <div className="text-center py-8 text-wedding-maroon">No guests match your search.</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">

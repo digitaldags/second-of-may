@@ -275,6 +275,7 @@ For Vercel deployment:
      -e SUPABASE_KEY=your_supabase_key \
      -e ADMIN_PASSWORD=your_admin_password \
      wedding-rsvp`
+- `docker-compose up --build`
 ## License
 
 MIT

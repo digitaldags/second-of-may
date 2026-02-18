@@ -9,7 +9,8 @@ import { useEffect, useState, FormEvent, ChangeEvent } from 'react'
 import {
   createGuest,
   deleteGuest,
-  getAllGuests,
+  getGuestsPaginated,
+  getAllGuestsForExport,
   updateGuest,
   importGuestsFromCSV,
 } from '@/app/actions/guests'
@@ -48,18 +49,27 @@ export default function GuestList() {
     skipped: number
     errors: string[]
   } | null>(null)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [totalCount, setTotalCount] = useState(0)
+  const [totalEnabled, setTotalEnabled] = useState(0)
+  const [totalDisabled, setTotalDisabled] = useState(0)
+  const PAGE_SIZE = 15
 
   useEffect(() => {
     loadGuests()
-  }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage])
 
   const loadGuests = async () => {
     setIsLoading(true)
     setError(null)
     setActionMessage(null)
     try {
-      const data = await getAllGuests()
-      setGuests(data)
+      const result = await getGuestsPaginated(currentPage, PAGE_SIZE)
+      setGuests(result.data)
+      setTotalCount(result.total)
+      setTotalEnabled(result.totalEnabled)
+      setTotalDisabled(result.totalDisabled)
     } catch (err) {
       setError('Failed to load guests')
       console.error(err)
@@ -107,9 +117,9 @@ export default function GuestList() {
       return
     }
 
-    await loadGuests()
     cancelEdit()
     setActionMessage('Guest updated successfully.')
+    await loadGuests()
   }
 
   const handleDelete = async (id: string) => {
@@ -128,8 +138,14 @@ export default function GuestList() {
       return
     }
 
-    await loadGuests()
     setActionMessage('Guest deleted successfully.')
+    // If we deleted the last row on a non-first page, step back one page.
+    // The useEffect will fire and reload; otherwise reload current page manually.
+    if (guests.length === 1 && currentPage > 0) {
+      setCurrentPage((p: number) => p - 1)
+    } else {
+      await loadGuests()
+    }
   }
 
   const handleOpenAddModal = () => {
@@ -153,13 +169,21 @@ export default function GuestList() {
 
     setIsAddModalOpen(false)
     setActionMessage('Guest added successfully.')
-    await loadGuests()
+    // Navigate to page 0 so the new guest (ordered by created_at DESC) is visible.
+    // If already on page 0, manually reload since setCurrentPage won't trigger the effect.
+    if (currentPage === 0) {
+      await loadGuests()
+    } else {
+      setCurrentPage(0)
+    }
   }
 
-  const handleExport = () => {
-    // Convert guests to CSV format
+  const handleExport = async () => {
+    const allGuests = await getAllGuestsForExport()
+    if (allGuests.length === 0) return
+
     const headers = ['First Name', 'Last Name', 'Enabled', 'INC Member', 'Created At', 'Updated At']
-    const rows = guests.map((guest) => [
+    const rows = allGuests.map((guest) => [
       guest.first_name,
       guest.last_name,
       guest.enabled ? 'Yes' : 'No',
@@ -173,7 +197,6 @@ export default function GuestList() {
       ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
     ].join('\n')
 
-    // Create download link
     const blob = new Blob([csvContent], { type: 'text/csv' })
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -208,8 +231,12 @@ export default function GuestList() {
       setImportResult(result)
       
       if (result.imported > 0) {
-        await loadGuests()
         setActionMessage(`Successfully imported ${result.imported} guest(s).`)
+        if (currentPage === 0) {
+          await loadGuests()
+        } else {
+          setCurrentPage(0)
+        }
       }
     } catch (error) {
       console.error('Error reading CSV:', error)
@@ -230,10 +257,6 @@ export default function GuestList() {
     setIsImportModalOpen(true)
   }
 
-  // Calculate counts
-  const totalGuests = guests.length
-  const enabledGuests = guests.filter((g) => g.enabled).length
-  const disabledGuests = guests.filter((g) => !g.enabled).length
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-8">
@@ -254,7 +277,7 @@ export default function GuestList() {
           </button>
           <button
             onClick={handleExport}
-            disabled={guests.length === 0}
+            disabled={totalCount === 0}
             className="bg-wedding-maroon/80 text-white px-4 py-2 rounded-lg font-semibold hover:bg-wedding-maroon transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Export CSV
@@ -266,15 +289,15 @@ export default function GuestList() {
       <div className="mb-6 flex gap-4 flex-wrap">
         <div className="bg-wedding-beige p-4 rounded-lg flex-1 min-w-[200px]">
           <div className="text-sm text-wedding-maroon-dark">Total Guests</div>
-          <div className="text-2xl font-bold text-wedding-maroon-dark">{totalGuests}</div>
+          <div className="text-2xl font-bold text-wedding-maroon-dark">{totalCount}</div>
         </div>
         <div className="bg-green-50 p-4 rounded-lg flex-1 min-w-[200px]">
           <div className="text-sm text-green-700">Enabled</div>
-          <div className="text-2xl font-bold text-green-800">{enabledGuests}</div>
+          <div className="text-2xl font-bold text-green-800">{totalEnabled}</div>
         </div>
         <div className="bg-red-50 p-4 rounded-lg flex-1 min-w-[200px]">
           <div className="text-sm text-red-700">Disabled</div>
-          <div className="text-2xl font-bold text-red-800">{disabledGuests}</div>
+          <div className="text-2xl font-bold text-red-800">{totalDisabled}</div>
         </div>
       </div>
 
@@ -468,6 +491,42 @@ export default function GuestList() {
           </table>
         </div>
       )}
+
+      {/* Pagination controls */}
+      {!isLoading && !error && totalCount > 0 && (
+        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-sm text-wedding-maroon">
+            Showing {currentPage * PAGE_SIZE + 1}–{Math.min((currentPage + 1) * PAGE_SIZE, totalCount)} of {totalCount} guest{totalCount !== 1 ? 's' : ''}
+          </p>
+          <div className="flex items-center gap-3">
+            {editState.id && (
+              <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-md">
+                Save or cancel your edit before changing pages.
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p: number) => p - 1)}
+              disabled={currentPage === 0 || isLoading || !!editState.id}
+              className="px-4 py-2 text-sm rounded-lg border border-wedding-beige-dark text-wedding-maroon hover:bg-wedding-beige-light disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-200"
+            >
+              ← Previous
+            </button>
+            <span className="text-sm text-wedding-maroon-dark font-medium">
+              Page {currentPage + 1} of {Math.max(1, Math.ceil(totalCount / PAGE_SIZE))}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p: number) => p + 1)}
+              disabled={(currentPage + 1) * PAGE_SIZE >= totalCount || isLoading || !!editState.id}
+              className="px-4 py-2 text-sm rounded-lg border border-wedding-beige-dark text-wedding-maroon hover:bg-wedding-beige-light disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-200"
+            >
+              Next →
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Add guest modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">

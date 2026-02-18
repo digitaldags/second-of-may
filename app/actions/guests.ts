@@ -8,10 +8,61 @@ import { supabase } from '@/lib/supabase'
 import type { Database, Guest } from '@/lib/types'
 
 /**
- * Fetch all guests from the database
- * @returns Array of Guest objects
+ * Fetch a page of guests from the database
+ * @param page - Zero-based page index
+ * @param pageSize - Number of rows per page
  */
-export async function getAllGuests(): Promise<Guest[]> {
+export async function getGuestsPaginated(
+  page: number,
+  pageSize: number
+): Promise<{
+  data: Guest[]
+  total: number
+  totalEnabled: number
+  totalDisabled: number
+}> {
+  try {
+    const from = page * pageSize
+    const to = from + pageSize - 1
+
+    const [pageResult, enabledResult, disabledResult] = await Promise.all([
+      supabase
+        .from('guest_list')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(from, to),
+      supabase
+        .from('guest_list')
+        .select('id', { count: 'exact', head: true })
+        .eq('enabled', true),
+      supabase
+        .from('guest_list')
+        .select('id', { count: 'exact', head: true })
+        .eq('enabled', false),
+    ])
+
+    if (pageResult.error) {
+      console.error('Error fetching guests:', pageResult.error)
+      return { data: [], total: 0, totalEnabled: 0, totalDisabled: 0 }
+    }
+
+    return {
+      data: pageResult.data || [],
+      total: pageResult.count ?? 0,
+      totalEnabled: enabledResult.count ?? 0,
+      totalDisabled: disabledResult.count ?? 0,
+    }
+  } catch (error) {
+    console.error('Error fetching guests:', error)
+    return { data: [], total: 0, totalEnabled: 0, totalDisabled: 0 }
+  }
+}
+
+/**
+ * Fetch all guests from the database (used for CSV export only)
+ * @returns Array of all Guest objects
+ */
+export async function getAllGuestsForExport(): Promise<Guest[]> {
   try {
     const { data, error } = await supabase
       .from('guest_list')
@@ -19,13 +70,13 @@ export async function getAllGuests(): Promise<Guest[]> {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching guests:', error)
+      console.error('Error fetching guests for export:', error)
       return []
     }
 
     return data || []
   } catch (error) {
-    console.error('Error fetching guests:', error)
+    console.error('Error fetching guests for export:', error)
     return []
   }
 }

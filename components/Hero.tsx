@@ -38,6 +38,20 @@ const slides = [
     objectPosition: 'center center',
     mobileObjectPosition: 'center center'
   },
+  { 
+    src: '/hero-5-hd.jpg',
+    mobileSrc: '/hero-5-hd-mobile.jpg',
+    alt: 'Jann Daniel and Faith - Image 4',
+    objectPosition: 'center center',
+    mobileObjectPosition: 'center center'
+  },
+  { 
+    src: '/hero-6-hd.jpg',
+    mobileSrc: '/hero-6-hd-mobile.jpg',
+    alt: 'Jann Daniel and Faith - Image 5',
+    objectPosition: 'center center',
+    mobileObjectPosition: 'center center'
+  },
 ]
 
 export default function Hero() {

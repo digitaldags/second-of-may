@@ -34,7 +34,7 @@ export default function VenueInfo({ attendanceType, isInc = false }: VenueInfoPr
               <span className="font-semibold">Date:</span> May 2, 2026
             </p>
             <p>
-              <span className="font-semibold">Time:</span> 3:00 PM
+              <span className="font-semibold">Time:</span> 2:15 PM
             </p>
             <p className="text-sm italic mt-4 text-wedding-maroon/80">
               Please arrive 15–20 minutes early to be seated before the ceremony begins.

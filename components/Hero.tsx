@@ -32,7 +32,7 @@ export default function Hero() {
       const interval = setInterval(() => {
         setIsTransitioning(true)
         setCurrentIndex((prev) => prev + 1)
-      }, 4000)
+      }, 7000)
       
       return () => clearInterval(interval)
     }

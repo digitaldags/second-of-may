@@ -17,9 +17,27 @@ const greatVibes = Great_Vibes({
 })
 
 const slides = [
-  { src: '/hero-1-hd.jpg', alt: 'Jann Daniel and Faith - Image 1', objectPosition: '30% center' },
-  { src: '/hero-3-hd.jpg', alt: 'Jann Daniel and Faith - Image 2', objectPosition: '30% center' },
-  { src: '/hero-4-hd.jpg', alt: 'Jann Daniel and Faith - Image 3', objectPosition: 'center center' },
+  { 
+    src: '/hero-1-hd.jpg',
+    mobileSrc: '/hero-1-hd-mobile.jpg',
+    alt: 'Jann Daniel and Faith - Image 1',
+    objectPosition: '30% center',
+    mobileObjectPosition: 'center center'
+  },
+  { 
+    src: '/hero-3-hd.jpg',
+    mobileSrc: '/hero-3-hd-mobile.jpg',
+    alt: 'Jann Daniel and Faith - Image 2',
+    objectPosition: '30% center',
+    mobileObjectPosition: 'center center'
+  },
+  { 
+    src: '/hero-4-hd.jpg',
+    mobileSrc: '/hero-4-hd-mobile.jpg',
+    alt: 'Jann Daniel and Faith - Image 3',
+    objectPosition: 'center center',
+    mobileObjectPosition: 'center center'
+  },
 ]
 
 export default function Hero() {
@@ -85,11 +103,24 @@ export default function Hero() {
         {[...slides, slides[0]].map((slide, index) => (
           <div key={index} className="relative min-w-full h-full">
             <Image
+              src={slide.mobileSrc}
+              alt={slide.alt}
+              fill
+              priority={index === 0}
+              quality={95}
+              sizes="100vw"
+              className="object-cover md:hidden"
+              style={{ objectPosition: slide.mobileObjectPosition || slide.objectPosition }}
+            />
+            
+            <Image
               src={slide.src}
               alt={slide.alt}
               fill
               priority={index === 0}
-              className="object-cover"
+              quality={95}
+              sizes="100vw"
+              className="object-cover hidden md:block"
               style={{ objectPosition: slide.objectPosition }}
             />
           </div>

@@ -1,7 +1,7 @@
 /**
  * Full-width hero header for the landing page.
  * Features an automatic slideshow with 3 images, sliding transitions,
- * and customizable focal points for mobile responsiveness.
+ * manual navigation with arrow buttons, and customizable focal points for mobile responsiveness.
  */
 
 'use client'
@@ -9,6 +9,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Great_Vibes } from 'next/font/google'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 const greatVibes = Great_Vibes({
   subsets: ['latin'],
@@ -16,27 +17,28 @@ const greatVibes = Great_Vibes({
 })
 
 const slides = [
-  { src: '/hero-1.jpg', alt: 'Jann Daniel and Faith - Image 1', objectPosition: '30% center' },
-  { src: '/hero-3.jpg', alt: 'Jann Daniel and Faith - Image 2', objectPosition: '30% center' },
-  { src: '/hero-4.jpg', alt: 'Jann Daniel and Faith - Image 3', objectPosition: 'center center' },
+  { src: '/hero-1-hd.jpg', alt: 'Jann Daniel and Faith - Image 1', objectPosition: '30% center' },
+  { src: '/hero-3-hd.jpg', alt: 'Jann Daniel and Faith - Image 2', objectPosition: '30% center' },
+  { src: '/hero-4-hd.jpg', alt: 'Jann Daniel and Faith - Image 3', objectPosition: 'center center' },
 ]
 
 export default function Hero() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(true)
+  const [isAutoPlayPaused, setIsAutoPlayPaused] = useState(false)
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     
-    if (!prefersReducedMotion) {
+    if (!prefersReducedMotion && !isAutoPlayPaused) {
       const interval = setInterval(() => {
         setIsTransitioning(true)
         setCurrentIndex((prev) => prev + 1)
-      }, 7000)
+      }, 5000)
       
       return () => clearInterval(interval)
     }
-  }, [])
+  }, [isAutoPlayPaused])
 
   useEffect(() => {
     if (currentIndex === slides.length) {
@@ -48,6 +50,27 @@ export default function Hero() {
       return () => clearTimeout(timeout)
     }
   }, [currentIndex])
+
+  const goToNext = () => {
+    setIsAutoPlayPaused(true)
+    setIsTransitioning(true)
+    setCurrentIndex((prev) => prev + 1)
+  }
+
+  const goToPrevious = () => {
+    setIsAutoPlayPaused(true)
+    if (currentIndex === 0) {
+      setIsTransitioning(false)
+      setCurrentIndex(slides.length)
+      setTimeout(() => {
+        setIsTransitioning(true)
+        setCurrentIndex(slides.length - 1)
+      }, 50)
+    } else {
+      setIsTransitioning(true)
+      setCurrentIndex((prev) => prev - 1)
+    }
+  }
 
   return (
     <section className="relative h-screen w-full overflow-hidden">
@@ -94,6 +117,29 @@ export default function Hero() {
           </p>
         </div>
       </div>
+
+      {/* Navigation arrows */}
+      <button
+        onClick={goToPrevious}
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 
+                   bg-white/20 hover:bg-white/30 backdrop-blur-sm
+                   rounded-full p-2 md:p-3 transition-all
+                   focus:outline-none focus:ring-2 focus:ring-white/50"
+        aria-label="Previous slide"
+      >
+        <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 text-white" />
+      </button>
+
+      <button
+        onClick={goToNext}
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-10
+                   bg-white/20 hover:bg-white/30 backdrop-blur-sm
+                   rounded-full p-2 md:p-3 transition-all
+                   focus:outline-none focus:ring-2 focus:ring-white/50"
+        aria-label="Next slide"
+      >
+        <ChevronRight className="w-5 h-5 md:w-6 md:h-6 text-white" />
+      </button>
     </section>
   )
 }

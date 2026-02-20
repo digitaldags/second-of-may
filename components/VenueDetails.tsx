@@ -84,7 +84,7 @@ export default function VenueDetails() {
                         <div className="w-full order-2">
                             <div className="rounded-xl overflow-hidden shadow-lg relative aspect-[4/3]">
                                 <Image
-                                    src="/church-ceremony.jpg"
+                                    src="/church-ceremony-1.png"
                                     alt="Iglesia Ni Cristo - Locale of Pasay"
                                     fill
                                     className="object-cover"

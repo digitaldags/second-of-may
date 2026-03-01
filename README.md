@@ -257,6 +257,58 @@ The project includes unit tests for form validation and server actions. Run test
 npm test
 ```
 
+## Email Reminders
+
+The admin dashboard includes a manual email reminder system. Reminder emails are sent to attending guests via [Resend](https://resend.com). The email body dynamically computes how many days until the wedding at the time you click Send.
+
+### Setup
+
+#### 1. Create a Resend Account
+
+Go to [resend.com](https://resend.com) and sign up. The free tier allows 3,000 emails/month and 100/day.
+
+#### 2. Verify Your Sending Domain
+
+1. In the Resend dashboard, go to **Domains → Add Domain**.
+2. Enter the domain you want to send from (e.g. `yourdomain.com`).
+3. Add the DNS records (MX, TXT, DKIM) that Resend provides to your domain registrar.
+4. Click **Verify** — DNS propagation may take a few minutes to a few hours.
+
+> If you don't have a custom domain, Resend's shared `@resend.dev` address works for testing but guests may see it as spam.
+
+#### 3. Get Your API Key
+
+In the Resend dashboard, go to **API Keys → Create API Key**. Set permission to **Sending access**. Copy the key (starts with `re_`) — it is only shown once.
+
+#### 4. Set Environment Variables
+
+Add to your `.env` file:
+
+```env
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxx
+RESEND_FROM_EMAIL=noreply@yourdomain.com
+WEDDING_DATE=2026-05-02
+```
+
+#### 5. Run the Supabase Migration
+
+In the Supabase dashboard, go to **SQL Editor** and run:
+
+```sql
+ALTER TABLE rsvps
+  ADD COLUMN reminder_sent BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN reminder_sent_at TIMESTAMP WITH TIME ZONE;
+```
+
+#### 6. Using the Reminder Buttons
+
+After setup, log in to `/admin/rsvps`:
+
+- **Send All Reminders** (toolbar, beside Export CSV) — sends to all attending guests where no reminder has been sent yet. Disabled if there are no attending RSVPs.
+- **Send / ✓ Resend** (Actions column, per row) — sends to a single guest. Only appears for attending guests. Shows a green `✓ Resend` label after a reminder has already been sent, allowing re-delivery if needed.
+
+Always send a test email to yourself first before doing a bulk send.
+
 ## Deployment
 
 1. Build the application: `npm run build`
@@ -274,8 +326,12 @@ For Vercel deployment:
      -e SUPABASE_URL=your_supabase_url \
      -e SUPABASE_KEY=your_supabase_key \
      -e ADMIN_PASSWORD=your_admin_password \
+     -e RESEND_API_KEY=your_resend_api_key \
+     -e RESEND_FROM_EMAIL=noreply@yourdomain.com \
+     -e NEXT_PUBLIC_WEDDING_DATE=2026-05-02 \
      wedding-rsvp`
 - `docker-compose up --build`
+
 ## License
 
 MIT

@@ -36,6 +36,8 @@ export default function AdminDashboard() {
   })
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
+  const [isSendingAll, setIsSendingAll] = useState(false)
+  const [isSendingOne, setIsSendingOne] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(0)
   const [totalFiltered, setTotalFiltered] = useState(0)
   const [totalAll, setTotalAll] = useState(0)
@@ -209,6 +211,55 @@ export default function AdminDashboard() {
     window.URL.revokeObjectURL(url)
   }
 
+  const handleSendAll = async () => {
+    const confirmed = window.confirm(
+      'Send a reminder email to all attending guests who haven\'t received one yet?'
+    )
+    if (!confirmed) return
+
+    setIsSendingAll(true)
+    setActionMessage(null)
+    try {
+      const res = await fetch('/api/reminders/send', { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) {
+        setActionMessage(json.error || 'Failed to send reminders.')
+      } else {
+        setActionMessage(json.message)
+        await loadRSVPs()
+      }
+    } catch {
+      setActionMessage('An unexpected error occurred while sending reminders.')
+    } finally {
+      setIsSendingAll(false)
+    }
+  }
+
+  const handleSendOne = async (rsvp: RSVP) => {
+    const label = rsvp.reminder_sent ? 'Resend' : 'Send'
+    const confirmed = window.confirm(
+      `${label} a reminder email to ${rsvp.first_name} ${rsvp.last_name} (${rsvp.email})?`
+    )
+    if (!confirmed) return
+
+    setIsSendingOne(rsvp.id)
+    setActionMessage(null)
+    try {
+      const res = await fetch(`/api/reminders/send/${rsvp.id}`, { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) {
+        setActionMessage(json.error || 'Failed to send reminder.')
+      } else {
+        setActionMessage(`Reminder sent to ${rsvp.first_name} ${rsvp.last_name}.`)
+        await loadRSVPs()
+      }
+    } catch {
+      setActionMessage('An unexpected error occurred while sending the reminder.')
+    } finally {
+      setIsSendingOne(null)
+    }
+  }
+
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-8">
@@ -309,6 +360,13 @@ export default function AdminDashboard() {
             <option value="reception">Reception Only</option>
             <option value="both">Both Events</option>
           </select>
+          <button
+            onClick={handleSendAll}
+            disabled={isSendingAll || totalAttending === 0}
+            className="bg-wedding-maroon text-white px-4 py-2 rounded-lg font-semibold hover:bg-wedding-maroon-dark transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSendingAll ? 'Sending...' : 'Send All Reminders'}
+          </button>
           <button
             onClick={handleExport}
             disabled={totalAll === 0}
@@ -520,7 +578,7 @@ export default function AdminDashboard() {
                         </button>
                       </div>
                     ) : (
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
                         <button
                           type="button"
                           onClick={() => startEdit(rsvp)}
@@ -536,6 +594,27 @@ export default function AdminDashboard() {
                         >
                           {isDeleting === rsvp.id ? 'Deleting...' : 'Delete'}
                         </button>
+                        {rsvp.attending && (
+                          <button
+                            type="button"
+                            onClick={() => handleSendOne(rsvp)}
+                            disabled={isSendingOne === rsvp.id}
+                            title={rsvp.reminder_sent && rsvp.reminder_sent_at
+                              ? `Reminder sent ${new Date(rsvp.reminder_sent_at).toLocaleString()}`
+                              : 'Send reminder email'}
+                            className={`px-3 py-1 text-sm rounded-md border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                              rsvp.reminder_sent
+                                ? 'border-green-300 text-green-700 hover:bg-green-50'
+                                : 'border-blue-300 text-blue-700 hover:bg-blue-50'
+                            }`}
+                          >
+                            {isSendingOne === rsvp.id
+                              ? 'Sending...'
+                              : rsvp.reminder_sent
+                                ? '✓ Resend'
+                                : 'Send'}
+                          </button>
+                        )}
                       </div>
                     )}
                   </td>

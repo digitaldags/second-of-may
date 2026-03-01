@@ -13,6 +13,8 @@ export interface RSVP {
   attendance_type: AttendanceType
   created_at: string
   updated_at: string | null
+  reminder_sent: boolean
+  reminder_sent_at: string | null
 }
 
 export interface Guest {
@@ -43,6 +45,8 @@ export interface Database {
           email: string
           attending: boolean
           attendance_type: AttendanceType
+          reminder_sent: boolean
+          reminder_sent_at: string | null
         }>
         Relationships: []
       }

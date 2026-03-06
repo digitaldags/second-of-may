@@ -10,14 +10,14 @@ import { useRouter } from 'next/navigation'
 import { submitRSVP } from '@/app/actions/rsvp'
 import type { RSVPFormData } from '@/lib/types'
 
-export default function RSVPForm() {
+export default function RSVPForm({ receptionOnly = false }: { receptionOnly?: boolean }) {
   const router = useRouter()
   const [formData, setFormData] = useState<RSVPFormData>({
     first_name: '',
     last_name: '',
     email: '',
     attending: true,
-    attendance_type: 'both',
+    attendance_type: receptionOnly ? 'reception' : 'both',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -137,7 +137,7 @@ export default function RSVPForm() {
           </div>
         </div>
 
-        {formData.attending && (
+        {formData.attending && !receptionOnly && (
           <div>
             <label className="block text-sm font-medium text-wedding-maroon-dark mb-3">
               Attendance Preference *
@@ -177,6 +177,14 @@ export default function RSVPForm() {
                 <span className="text-wedding-maroon-dark">Reception Only</span>
               </label>
             </div>
+          </div>
+        )}
+
+        {formData.attending && receptionOnly && (
+          <div className="bg-wedding-beige-light border border-wedding-beige-dark rounded-lg px-4 py-3">
+            <p className="text-sm font-medium text-wedding-maroon-dark">
+              Attendance: <span className="font-semibold">Reception Only</span>
+            </p>
           </div>
         )}
 

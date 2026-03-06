@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 
-export default function VenueDetails() {
+export default function VenueDetails({ showChurch = true }: { showChurch?: boolean }) {
     const [isVisible, setIsVisible] = useState(false)
 
     useEffect(() => {
@@ -18,7 +18,7 @@ export default function VenueDetails() {
     return (
         <div className="w-full" id="venue-details">
             {/* Ceremony Section */}
-            <section className="w-full bg-white py-20 md:py-32">
+            {showChurch && <section className="w-full bg-white py-20 md:py-32">
                 <div
                     className={`max-w-6xl mx-auto px-4 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
                         }`}
@@ -119,7 +119,7 @@ export default function VenueDetails() {
                         </div>
                     </div>
                 </div>
-            </section>
+            </section>}
 
             {/* Reception Section */}
             <section className="w-full bg-wedding-beige-light py-20 md:py-32">

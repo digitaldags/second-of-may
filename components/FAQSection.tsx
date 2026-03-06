@@ -7,6 +7,13 @@ interface FAQItem {
   answer: string
 }
 
+const churchOnlyFAQs = new Set([
+  'Can we skip the ceremony and go to the reception?',
+  'We will be going to the church, what time should we arrive?',
+  'Can we take pictures and videos during the ceremony?',
+  'Can we sit anywhere on the church?',
+])
+
 const faqs: FAQItem[] = [
   {
     question: 'Can we skip the ceremony and go to the reception?',
@@ -119,8 +126,12 @@ function FAQItem({ faq, isOpen, onToggle }: { faq: FAQItem; isOpen: boolean; onT
   )
 }
 
-export default function FAQSection() {
+export default function FAQSection({ receptionOnly = false }: { receptionOnly?: boolean }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
+
+  const visibleFAQs = receptionOnly
+    ? faqs.filter((faq) => !churchOnlyFAQs.has(faq.question))
+    : faqs
 
   const toggleFAQ = (index: number) => {
     setOpenIndex(openIndex === index ? null : index)
@@ -143,7 +154,7 @@ export default function FAQSection() {
 
         {/* FAQ Accordion */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-wedding-beige-dark/20">
-          {faqs.map((faq, index) => (
+          {visibleFAQs.map((faq, index) => (
             <FAQItem
               key={index}
               faq={faq}

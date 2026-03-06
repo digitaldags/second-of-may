@@ -122,14 +122,14 @@ export default async function ConfirmationPage({ params }: ConfirmationPageProps
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up" style={{ animationDelay: '450ms' }}>
           <Link
-            href="/"
+            href={rsvp.attendance_type === 'reception' ? '/reception' : '/'}
             className="inline-block bg-wedding-maroon text-white px-8 py-3 rounded-lg font-semibold hover:bg-wedding-maroon-dark transition-colors duration-200 text-center"
           >
             Back to Home
           </Link>
           {rsvp.attending && (
             <Link
-              href="/#venue-details"
+              href={rsvp.attendance_type === 'reception' ? '/reception#venue-details' : '/#venue-details'}
               className="inline-block bg-white text-wedding-maroon border-2 border-wedding-maroon px-8 py-3 rounded-lg font-semibold hover:bg-wedding-beige-light transition-colors duration-200 text-center"
             >
               View Full Venue Details

@@ -81,6 +81,15 @@ export function ReminderEmail({
               <Heading as="h3" style={subheadingStyle}>
                 Church Ceremony
               </Heading>
+              <Section style={timeChangeBoxStyle}>
+                <Text style={timeChangeTitleStyle}>Time Change Notice</Text>
+                <Text style={timeChangeBodyStyle}>
+                  Please note that the church ceremony time has been updated.
+                  The ceremony will now begin at <strong>2:00 PM</strong>{' '}
+                  (previously 2:15 PM). Please update your plans accordingly
+                  and aim to arrive 15–20 minutes early.
+                </Text>
+              </Section>
               <Text style={bodyTextStyle}>
                 <strong>Venue:</strong> Iglesia Ni Cristo – Locale of Pasay
                 <br />
@@ -88,7 +97,7 @@ export function ReminderEmail({
                 <br />
                 <strong>Date:</strong> May 2, 2026
                 <br />
-                <strong>Time:</strong> 2:15 PM
+                <strong>Time:</strong> 2:00 PM
               </Text>
               <Text style={noteTextStyle}>
                 Please arrive 15–20 minutes early to be seated before the
@@ -330,5 +339,27 @@ const footerStyle: React.CSSProperties = {
 const footerTextStyle: React.CSSProperties = {
   color: '#9a8070',
   fontSize: '12px',
+  margin: 0,
+}
+
+const timeChangeBoxStyle: React.CSSProperties = {
+  backgroundColor: '#fffbeb',
+  borderLeft: '4px solid #d97706',
+  borderRadius: '0 6px 6px 0',
+  padding: '16px',
+  marginBottom: '16px',
+}
+
+const timeChangeTitleStyle: React.CSSProperties = {
+  color: '#92400e',
+  fontSize: '14px',
+  fontWeight: 'bold',
+  margin: '0 0 6px 0',
+}
+
+const timeChangeBodyStyle: React.CSSProperties = {
+  color: '#3d1a22',
+  fontSize: '13px',
+  lineHeight: '1.6',
   margin: 0,
 }

@@ -1,24 +1,27 @@
-/**
- * Supabase client configuration
- * Creates a server-side client for database operations
- */
-
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from './types'
 
-// Get Supabase credentials from environment variables
-const supabaseUrl = process.env.SUPABASE_URL
-const supabaseKey = process.env.SUPABASE_KEY
+type SupabaseClient = ReturnType<typeof createClient<Database>>
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error(
-    'Missing Supabase environment variables. Please set SUPABASE_URL and SUPABASE_KEY.'
-  )
+let _client: SupabaseClient | undefined
+
+function getClient(): SupabaseClient {
+  if (_client) return _client
+  const url = process.env.SUPABASE_URL
+  const key = process.env.SUPABASE_KEY
+  if (!url || !key) {
+    throw new Error(
+      'Missing Supabase environment variables. Please set SUPABASE_URL and SUPABASE_KEY.'
+    )
+  }
+  _client = createClient<Database>(url, key)
+  return _client
 }
 
-/**
- * Server-side Supabase client
- * Use this for API routes and server actions
- */
-export const supabase = createClient<Database>(supabaseUrl, supabaseKey)
+// Proxy defers client creation to first use (request time, not build time)
+export const supabase: SupabaseClient = new Proxy({} as SupabaseClient, {
+  get(_, prop: string | symbol) {
+    return Reflect.get(getClient(), prop)
+  },
+})
 

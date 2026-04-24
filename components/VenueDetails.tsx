@@ -47,7 +47,7 @@ export default function VenueDetails({ showChurch = true }: { showChurch?: boole
                                 </p>
                                 <p className="text-wedding-maroon mb-4">
                                     <span className="font-medium">Time:</span> Ceremony starts at
-                                    2:15 PM
+                                    2:00 PM
                                 </p>
                                 <div className="bg-wedding-beige-light border-l-4 border-wedding-maroon p-4 rounded-r-lg">
                                     <p className="text-sm text-wedding-maroon-dark">
